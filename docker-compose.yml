@@ -70,6 +70,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-marketplace_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
     ports:
       - "5432:5432"
     networks:
