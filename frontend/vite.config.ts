@@ -19,6 +19,10 @@ export default defineConfig({
         target: process.env.VITE_API_PROXY_TARGET || 'http://backend:8000',
         changeOrigin: true,
       },
+      '/storage': {
+        target: process.env.VITE_API_PROXY_TARGET || 'http://backend:8000',
+        changeOrigin: true,
+      },
     },
   },
 })

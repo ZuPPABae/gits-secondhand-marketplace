@@ -210,6 +210,29 @@ class ListingManagementTest extends TestCase
         $this->assertDatabaseCount('listing_images', 1);
     }
 
+    public function test_cannot_delete_images_belonging_to_another_listing_returns_422(): void
+    {
+        $user = User::factory()->create();
+        $myListing = Listing::factory()->create(['user_id' => $user->id]);
+
+        $otherUser = User::factory()->create();
+        $otherListing = Listing::factory()->create(['user_id' => $otherUser->id]);
+
+        $otherImage = ListingImage::create([
+            'listing_id' => $otherListing->id,
+            'path' => 'listings/other.jpg',
+            'position' => 0,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/v1/listings/'.$myListing->id, [
+                'delete_image_ids' => [$otherImage->id],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['delete_image_ids.0']);
+    }
+
     public function test_non_owner_cannot_update_listing_returns_403(): void
     {
         $owner = User::factory()->create();

@@ -34,7 +34,12 @@ class UpdateListingRequest extends FormRequest
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'delete_image_ids' => ['nullable', 'array'],
-            'delete_image_ids.*' => ['integer'],
+            'delete_image_ids.*' => [
+                'integer',
+                Rule::exists('listing_images', 'id')->where(function ($query) {
+                    $query->where('listing_id', $this->route('id'));
+                }),
+            ],
         ];
     }
 
@@ -60,6 +65,7 @@ class UpdateListingRequest extends FormRequest
             'images.*.image' => 'File harus berupa gambar.',
             'images.*.mimes' => 'Format gambar harus berupa jpg, jpeg, png, atau webp.',
             'images.*.max' => 'Ukuran setiap gambar maksimal 2 MB.',
+            'delete_image_ids.*.exists' => 'Foto yang akan dihapus tidak valid atau bukan milik barang ini.',
         ];
     }
 }

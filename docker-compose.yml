@@ -25,7 +25,7 @@ services:
       - SESSION_DRIVER=redis
       - QUEUE_CONNECTION=sync
       - FILESYSTEM_DISK=public
-      - APP_KEY=${APP_KEY:-base64:8cIsf2xRa1FfdH2wtNOd/qjgcrxtwW8xvT79CrtaDc0=}
+      - APP_KEY=${APP_KEY:-}
     ports:
       - "8000:8000"
     depends_on:
