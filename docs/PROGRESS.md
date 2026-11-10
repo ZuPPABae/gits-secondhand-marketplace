@@ -76,3 +76,4 @@ docker exec -i marketplace_frontend npm run build
 
 4. **Validasi Kepemilikan Relasi Foto (`delete_image_ids`)**:
    - Menghindari kerentanan IDOR (Insecure Direct Object Reference) di mana user dapat mengirim ID foto barang milik pengguna lain saat mengedit barang miliknya sendiri. Form request `UpdateListingRequest` memvalidasi ID foto dengan rule scoped ke ID listing aktif.
+
