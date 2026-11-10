@@ -31,3 +31,4 @@ class ListingPolicy
         return $user->id === $listing->user_id;
     }
 }
+

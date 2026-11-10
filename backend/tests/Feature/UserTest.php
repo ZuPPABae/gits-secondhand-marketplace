@@ -90,3 +90,4 @@ class UserTest extends TestCase
             ]);
     }
 }
+
