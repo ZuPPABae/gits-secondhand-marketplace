@@ -55,33 +55,61 @@ gits-secondhand-marketplace/
 
 ## Cara Menjalankan
 
+### 1. Persiapan Environment (.env)
+Salin berkas konfigurasi environment dari `.env.example`:
 ```bash
-# 1. Clone repo
-git clone <repo-url>
-cd gits-secondhand-marketplace
-
-# 2. Salin file env
+# Salin root env untuk docker-compose
 cp .env.example .env
 
-# 3. Build dan jalankan semua container
-docker-compose up --build
+# Salin backend env jika diperlukan untuk lokal
+cp backend/.env.example backend/.env
 ```
 
-Aplikasi bisa dibuka di **http://localhost:5173**
+Jika `APP_KEY` belum terisi pada `.env`, Anda dapat menghasilkannya menggunakan perintah artisan setelah container berjalan:
+```bash
+docker compose run --rm backend php artisan key:generate
+```
+Lalu tempelkan nilai `APP_KEY=base64:...` yang dihasilkan ke berkas `.env` di root.
 
-Backend API tersedia di **http://localhost:8000/api/v1**
+### 2. Build dan Jalankan Container
+```bash
+docker compose up --build
+```
+> **Catatan**: Entrypoint backend akan secara otomatis menjalankan migrasi database, membuat symlink storage (`php artisan storage:link`), dan database dev sudah siap digunakan.
 
-Health check: **http://localhost:8000/up**
+Aplikasi web dapat dibuka di **http://localhost:5173**  
+Backend REST API tersedia di **http://localhost:8000/api/v1**  
+Health check endpoint: **http://localhost:8000/up**
 
 ## Akun Demo
 
-> ⚠️ Akun demo akan tersedia setelah seeder dijalankan (Fase 1). Jalankan `docker-compose exec backend php artisan db:seed` setelah container berjalan.
+Data demo diinisialisasi otomatis saat pertama kali migrasi dijalankan (`UserSeeder` & `ListingSeeder`):
 
-| Nama | Email | Password |
-|------|-------|----------|
-| Budi Santoso | budi@example.com | password123 |
-| Siti Rahayu | siti@example.com | password123 |
-| Ahmad Fauzi | ahmad@example.com | password123 |
+| Nama | Email | Password | No. HP (WhatsApp) | Lokasi |
+|------|-------|----------|-------------------|--------|
+| **Budi Santoso** | `budi@example.com` | `password123` | `6281234567890` | Tebet, Jakarta Selatan |
+| **Siti Rahma** | `siti@example.com` | `password123` | `6281298765432` | Serpong, Tangerang Selatan |
+| **Ahmad Hidayat** | `ahmad@example.com` | `password123` | `6281311223344` | Sukajadi, Bandung |
+
+## Menjalankan Pengujian (Testing)
+
+Pengujian backend berjalan di database terisolasi (`marketplace_test`) sehingga **tidak akan menghapus** data development (`marketplace_db`).
+
+Jalankan perintah pengujian berikut di terminal (jalankan satu per satu jika menggunakan PowerShell):
+
+```bash
+# 1. Feature & Unit Tests Backend (PHPUnit)
+docker exec -i marketplace_backend php artisan test
+
+# 2. Code Style Audit Backend (Laravel Pint)
+docker exec -i marketplace_backend ./vendor/bin/pint --test
+
+# 3. Linter Frontend (ESLint)
+docker exec -i marketplace_frontend npm run lint
+
+# 4. Typecheck & Production Build Frontend (Vite)
+docker exec -i marketplace_frontend npm run build
+```
 
 ## Dokumentasi
 

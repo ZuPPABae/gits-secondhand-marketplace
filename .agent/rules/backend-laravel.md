@@ -42,3 +42,9 @@
 - Security: password hash bawaan Laravel (bcrypt/argon2), `APP_DEBUG=false` di production, security headers dasar, tidak ada raw query dengan input user.
 - Test: minimal feature test untuk auth, CRUD listing, otorisasi pemilik, dan filter/search (Pest atau PHPUnit). Jalankan `php artisan test`.
 - Format kode: Laravel Pint.
+
+## Testing & Security Hardening
+- Database test terpisah: selalu gunakan `marketplace_test` dengan atribut `force="true"` (baik tag `<env>` maupun `<server>` di `phpunit.xml`), untuk mencegah variabel environment dari container/Docker mengalahkan konfigurasi test dan menghapus database dev (`marketplace_db`).
+- Cache & Session test: gunakan `CACHE_STORE=array` dan `SESSION_DRIVER=array` (dengan `force="true"`) agar pengujian tidak mencemari data cache/sesi Redis lokal.
+- Invalidation Cache: setiap operasi mutasi pada listing (update data, update status, delete) wajib menghapus cache detail (`listings:detail:{id}`).
+- Validasi Kepemilikan Relasi: endpoint dengan array ID relasi dari request (misalnya `delete_image_ids[]`) wajib divalidasi kepemilikannya menggunakan rule `exists` scoped ke ID listing yang bersangkutan (`Rule::exists('listing_images', 'id')->where('listing_id', $listingId)`), untuk mencegah pengguna menghapus relasi milik listing lain.

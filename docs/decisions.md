@@ -146,3 +146,48 @@ Dokumen ini mencatat keputusan teknis non-trivial beserta konteks, alasan, dan t
 **Alternatif**: Laravel Sail (wrapper Docker Compose), Valet/Herd (macOS only), Vagrant, bare metal install.
 
 **Trade-off**: Docker Desktop membutuhkan resource RAM/CPU lebih besar dari bare metal. Build pertama lebih lambat karena download image. Networking antar container perlu dipahami (nama service sebagai hostname).
+
+---
+
+## ADR-009: Isolasi Database Pengujian (`marketplace_test`) dan Atribut `force="true"`
+
+**Konteks**: Saat pengujian otomatis dijalankan (`php artisan test`), trait `RefreshDatabase` me-reset seluruh skema tabel. Variabel environment Docker Compose (`DB_DATABASE=marketplace_db`) diteruskan langsung ke container dan otomatis terpopulasi di `$_SERVER`.
+
+**Keputusan**: Buat database terpisah `marketplace_test` di PostgreSQL yang diinisialisasi melalui `docker/postgres/init-test-db.sql`. Di `backend/phpunit.xml`, tetapkan `DB_DATABASE=marketplace_test`, `CACHE_STORE=array`, dan `SESSION_DRIVER=array` menggunakan atribut `force="true"` pada tag `<server>` dan `<env>`, serta lengkapi dengan `backend/.env.testing`.
+
+**Alasan**:
+- Tanpa atribut `force="true"`, PHPUnit tidak menimpa variabel `$_SERVER` bawaan dari environment Docker, sehingga `RefreshDatabase` menghapus bersih seluruh data development di `marketplace_db`.
+- Penggunaan `CACHE_STORE=array` dan `SESSION_DRIVER=array` mencegah pengujian membersihkan atau mencemari data cache dan session Redis development.
+- Menjamin pengujian dapat dijalankan kapan saja tanpa merusak data seeder development.
+
+**Trade-off**: Memerlukan pembuatan database tambahan `marketplace_test` pada instance PostgreSQL lokal.
+
+---
+
+## ADR-010: Tabel `personal_access_tokens` Tidak Digunakan pada Alur SPA
+
+**Konteks**: Menjalankan `php artisan install:api` secara otomatis membuat file migrasi `personal_access_tokens` untuk token autentikasi Sanctum Bearer.
+
+**Keputusan**: Biarkan migrasi tabel `personal_access_tokens` tetap ada di repository demi integritas generator Laravel 12 API, namun seluruh alur autentikasi aplikasi MVP secara eksklusif menggunakan Sanctum SPA Cookie Auth (`httpOnly` session + `XSRF-TOKEN`).
+
+**Alasan**:
+- Cookie `httpOnly` kebal terhadap pencurian token via serangan XSS dibandingkan penyimpanan Bearer token di `localStorage`.
+- Menghindari modifikasi destruktif pada struktur bawaan Laravel `install:api`.
+- Tabel ini tetap tersedia untuk masa depan jika ada kebutuhan integrasi mobile app native atau third-party API keys tanpa perlu migrasi ulang.
+
+**Trade-off**: Terdapat satu tabel kosong di database selama aplikasi beroperasi dalam mode SPA web.
+
+---
+
+## ADR-011: Caching Detail Listing dengan TTL 5 Menit dan Invalidasi Eksplisit
+
+**Konteks**: Pola akses marketplace sangat read-heavy (asumsi rasio baca:tulis ~95:5). Endpoint detail barang (`GET /api/v1/listings/{id}`) memuat banyak relasi (kategori, galeri foto, profil penjual).
+
+**Keputusan**: Cache respons detail barang di Redis dengan kunci `listings:detail:{id}` dan TTL pendek 5 menit. Hapus cache secara eksplisit (`Cache::forget(...)`) setiap kali listing diperbarui, statusnya diubah, atau dihapus.
+
+**Alasan**:
+- Menghindari query repetitif ke PostgreSQL untuk barang-barang populer / trending.
+- TTL pendek (5 menit) membatasi dampak cache stale jika terjadi kegagalan invalidasi.
+- Invalidasi instan pada mutasi menjamin penjual dan pembeli langsung melihat status barang terkini (misal: saat ditandai "Terjual").
+
+**Trade-off**: Pengembang harus memastikan setiap rute mutasi yang memengaruhi data listing memanggil invalidasi cache yang sesuai.

@@ -42,6 +42,12 @@ Chat in-app, pembayaran, admin panel, favorit/wishlist, review/rating, notifikas
 - Tidak ada secret/credential/data pribadi asli di repo. Hanya `.env.example`.
 - Jalankan perintah test/lint setelah perubahan signifikan; perbaiki sampai hijau sebelum lanjut.
 
+## Pelajaran dan aturan tambahan
+- Test HARUS memakai database terpisah (`marketplace_test`) dengan `force="true"`; jangan pernah menjalankan test terhadap database dev (`marketplace_db`).
+- Shell Windows adalah PowerShell: jalankan perintah satu per satu, tanpa `&&`.
+- Setelah tiap fase atau sub-fase, perbarui `docs/PROGRESS.md` (apa yang selesai, apa berikutnya, keputusan penting, masalah yang diketahui) agar agent lain bisa melanjutkan hanya dengan membaca file itu.
+- Hemat kuota: kerjakan satu bagian sempit per sesi, jangan uji end-to-end panjang, cukup test/lint/build.
+
 ## Definition of Done
 - `docker compose up --build` lalu aplikasi bisa dibuka di `http://localhost:5173` dengan data seeder.
 - Semua fitur wajib bisa dipakai dari UI.
