@@ -64,6 +64,22 @@ export const App: React.FC = () => {
                   }
                 />
                 <Route
+                  path="/listings/new"
+                  element={
+                    <ProtectedRoute>
+                      <ListingForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/listings/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <ListingForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/my-listings"
                   element={
                     <ProtectedRoute>
