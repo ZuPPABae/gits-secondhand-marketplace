@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class Listing extends Model
 {
@@ -24,6 +26,27 @@ class Listing extends Model
     protected $guarded = [
         'id',
     ];
+
+    /**
+     * Model events: bersihkan cache Redis dan file storage saat model berubah/dihapus.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Listing $listing) {
+            Cache::forget("listings:detail:{$listing->id}");
+        });
+
+        static::deleting(function (Listing $listing) {
+            Cache::forget("listings:detail:{$listing->id}");
+
+            // Hapus semua file foto dari storage disk
+            foreach ($listing->images as $image) {
+                if (! str_starts_with($image->path, 'http://') && ! str_starts_with($image->path, 'https://')) {
+                    Storage::disk(config('filesystems.default'))->delete($image->path);
+                }
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

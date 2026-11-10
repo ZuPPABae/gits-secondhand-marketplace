@@ -4,14 +4,21 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ListingStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Listings\StoreListingRequest;
+use App\Http\Requests\Listings\UpdateListingRequest;
+use App\Http\Requests\Listings\UpdateListingStatusRequest;
 use App\Http\Resources\ListingDetailResource;
 use App\Http\Resources\ListingResource;
 use App\Models\Listing;
+use App\Models\ListingImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ListingController extends Controller
 {
@@ -104,5 +111,209 @@ class ListingController extends Controller
         return response()->json([
             'data' => new ListingDetailResource($listing),
         ]);
+    }
+
+    /**
+     * Pasang listing barang baru beserta foto (maksimal 5 foto, 2 MB/file).
+     * ID pengguna wajib diambil dari sesi auth yang sedang aktif.
+     */
+    public function store(StoreListingRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $listing = Listing::create([
+            'user_id' => $user->id,
+            'category_id' => $request->validated('category_id'),
+            'title' => $request->validated('title'),
+            'description' => $request->validated('description'),
+            'price' => $request->validated('price'),
+            'condition' => $request->validated('condition'),
+            'location' => $request->validated('location'),
+            'status' => ListingStatus::Available,
+        ]);
+
+        if ($request->hasFile('images')) {
+            $disk = config('filesystems.default');
+            foreach ($request->file('images') as $position => $file) {
+                $path = $file->store('listings', $disk);
+                ListingImage::create([
+                    'listing_id' => $listing->id,
+                    'path' => $path,
+                    'position' => $position,
+                ]);
+            }
+        }
+
+        $listing->load(['category', 'images', 'user:id,name,phone,location']);
+
+        return response()->json([
+            'message' => 'Listing barang berhasil dipasang.',
+            'data' => new ListingDetailResource($listing),
+        ], 201);
+    }
+
+    /**
+     * Perbarui data listing barang milik sendiri.
+     */
+    public function update(UpdateListingRequest $request, int|string $id): JsonResponse
+    {
+        $listing = Listing::with(['images'])->find($id);
+
+        if (! $listing) {
+            return response()->json([
+                'message' => 'Barang tidak ditemukan.',
+            ], 404);
+        }
+
+        Gate::authorize('update', $listing);
+
+        // Hapus foto jika ditentukan pada delete_image_ids
+        $deleteImageIds = $request->input('delete_image_ids', []);
+        if (! empty($deleteImageIds)) {
+            $imagesToDelete = $listing->images()->whereIn('id', $deleteImageIds)->get();
+            $disk = config('filesystems.default');
+            foreach ($imagesToDelete as $image) {
+                if (! str_starts_with($image->path, 'http://') && ! str_starts_with($image->path, 'https://')) {
+                    Storage::disk($disk)->delete($image->path);
+                }
+                $image->delete();
+            }
+        }
+
+        // Tambahkan foto baru jika ada
+        if ($request->hasFile('images')) {
+            $remainingImagesCount = $listing->images()->count();
+            $newImagesCount = count($request->file('images'));
+
+            if ($remainingImagesCount + $newImagesCount > 5) {
+                throw ValidationException::withMessages([
+                    'images' => ['Maksimal total foto untuk listing ini adalah 5 file.'],
+                ]);
+            }
+
+            $disk = config('filesystems.default');
+            $maxPosition = (int) ($listing->images()->max('position') ?? -1);
+
+            foreach ($request->file('images') as $file) {
+                $maxPosition++;
+                $path = $file->store('listings', $disk);
+                ListingImage::create([
+                    'listing_id' => $listing->id,
+                    'path' => $path,
+                    'position' => $maxPosition,
+                ]);
+            }
+        }
+
+        // Perbarui atribut teks
+        $fillableData = $request->safe()->only([
+            'title',
+            'category_id',
+            'description',
+            'price',
+            'condition',
+            'location',
+        ]);
+
+        if (! empty($fillableData)) {
+            $listing->update($fillableData);
+        }
+
+        // Invalidate Redis Cache
+        Cache::forget("listings:detail:{$id}");
+
+        $listing->load(['category', 'images', 'user:id,name,phone,location']);
+
+        return response()->json([
+            'message' => 'Listing berhasil diperbarui.',
+            'data' => new ListingDetailResource($listing),
+        ]);
+    }
+
+    /**
+     * Hapus listing barang beserta seluruh file foto dari storage.
+     */
+    public function destroy(int|string $id): JsonResponse
+    {
+        $listing = Listing::with(['images'])->find($id);
+
+        if (! $listing) {
+            return response()->json([
+                'message' => 'Barang tidak ditemukan.',
+            ], 404);
+        }
+
+        Gate::authorize('delete', $listing);
+
+        // Hapus fisik file foto
+        $disk = config('filesystems.default');
+        foreach ($listing->images as $image) {
+            if (! str_starts_with($image->path, 'http://') && ! str_starts_with($image->path, 'https://')) {
+                Storage::disk($disk)->delete($image->path);
+            }
+        }
+
+        $listing->delete();
+
+        // Invalidate Redis Cache
+        Cache::forget("listings:detail:{$id}");
+
+        return response()->json([
+            'message' => 'Listing berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Ubah status listing (available / sold).
+     */
+    public function updateStatus(UpdateListingStatusRequest $request, int|string $id): JsonResponse
+    {
+        $listing = Listing::find($id);
+
+        if (! $listing) {
+            return response()->json([
+                'message' => 'Barang tidak ditemukan.',
+            ], 404);
+        }
+
+        Gate::authorize('updateStatus', $listing);
+
+        $listing->update([
+            'status' => $request->validated('status'),
+        ]);
+
+        // Invalidate Redis Cache
+        Cache::forget("listings:detail:{$id}");
+
+        $listing->load(['category', 'images', 'user:id,name,phone,location']);
+
+        return response()->json([
+            'message' => 'Status listing berhasil diubah.',
+            'data' => new ListingDetailResource($listing),
+        ]);
+    }
+
+    /**
+     * Tampilkan seluruh listing milik pengguna yang sedang login (semua status: available & sold).
+     */
+    public function myListings(Request $request): AnonymousResourceCollection
+    {
+        $user = $request->user();
+
+        $perPage = (int) $request->input('per_page', 12);
+        if ($perPage < 1) {
+            $perPage = 12;
+        } elseif ($perPage > 50) {
+            $perPage = 50;
+        }
+
+        $listings = Listing::query()
+            ->where('user_id', $user->id)
+            ->with(['category', 'images', 'user:id,name,location'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return ListingResource::collection($listings);
     }
 }

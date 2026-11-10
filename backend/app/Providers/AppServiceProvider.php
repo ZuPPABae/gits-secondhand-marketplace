@@ -22,11 +22,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Rate limiter autentikasi: 5 percobaan per menit per IP + email
         RateLimiter::for('auth', function (Request $request) {
             $email = strtolower((string) $request->input('email', ''));
             $key = $request->ip().'|'.$email;
 
             return Limit::perMinute(5)->by($key);
+        });
+
+        // Rate limiter upload: 20 per jam per user (atau IP jika belum login)
+        RateLimiter::for('uploads', function (Request $request) {
+            $userId = $request->user()?->id;
+            $key = $userId ? "user:{$userId}" : "ip:{$request->ip()}";
+
+            return Limit::perHour(20)->by($key);
         });
     }
 }
