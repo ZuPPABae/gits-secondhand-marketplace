@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seeders will be implemented in Phase 1
+        $this->call([
+            CategorySeeder::class,
+            UserSeeder::class,
+            ListingSeeder::class,
+        ]);
     }
 }

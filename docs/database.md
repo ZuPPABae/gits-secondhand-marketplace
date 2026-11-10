@@ -2,7 +2,7 @@
 
 Database: **PostgreSQL 16**
 
-> Skema ini akan diimplementasikan melalui Laravel migrations di Fase 1.
+Seluruh skema diimplementasikan melalui Laravel 12 migrations dengan optimasi query index (composite index & GIN pg_trgm).
 
 ---
 
@@ -14,44 +14,61 @@ erDiagram
         bigint id PK
         varchar name
         varchar email UK
-        varchar phone
         varchar password
-        text avatar_url
-        text bio
-        timestamp email_verified_at
-        timestamps created_at
-        timestamps updated_at
+        varchar phone
+        varchar location
+        varchar remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    categories {
+        bigint id PK
+        varchar name
+        varchar slug UK
+        timestamp created_at
+        timestamp updated_at
     }
 
     listings {
         bigint id PK
         bigint user_id FK
+        bigint category_id FK
         varchar title
         text description
         bigint price
-        varchar category
         varchar condition
         varchar location
         varchar status
-        varchar photo_path
-        timestamps created_at
-        timestamps updated_at
-        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    listing_images {
+        bigint id PK
+        bigint listing_id FK
+        varchar path
+        integer position
+        timestamp created_at
+        timestamp updated_at
     }
 
     personal_access_tokens {
         bigint id PK
-        morphs tokenable
+        varchar tokenable_type
+        bigint tokenable_id
         varchar name
         varchar token UK
         text abilities
         timestamp last_used_at
         timestamp expires_at
-        timestamps created_at
-        timestamps updated_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     users ||--o{ listings : "memiliki"
+    categories ||--o{ listings : "mengkategorikan"
+    listings ||--o{ listing_images : "memiliki foto"
 ```
 
 ---
@@ -61,18 +78,34 @@ erDiagram
 | Kolom | Tipe | Nullable | Keterangan |
 |-------|------|----------|-----------|
 | `id` | `bigint` | NO | Primary key, auto-increment |
-| `name` | `varchar(255)` | NO | Nama lengkap |
-| `email` | `varchar(255)` | NO | Unique, untuk login |
-| `phone` | `varchar(20)` | YES | Nomor WhatsApp (tanpa +62, misal: 081234567890) |
-| `password` | `varchar(255)` | NO | Bcrypt hash |
-| `avatar_url` | `text` | YES | URL foto profil |
-| `bio` | `text` | YES | Deskripsi singkat penjual |
-| `email_verified_at` | `timestamp` | YES | Verifikasi email (future) |
-| `remember_token` | `varchar(100)` | YES | Laravel remember me |
-| `created_at` | `timestamp` | NO | — |
-| `updated_at` | `timestamp` | NO | — |
+| `name` | `varchar(255)` | NO | Nama lengkap pengguna |
+| `email` | `varchar(255)` | NO | Unique, kredensial login |
+| `password` | `varchar(255)` | NO | Hash password (bcrypt) |
+| `phone` | `varchar(255)` | NO | Nomor WhatsApp (format 62xxxxxxxxxx) |
+| `location` | `varchar(255)` | NO | Lokasi / kota domisili pengguna |
+| `remember_token` | `varchar(100)` | YES | Token remember me Laravel |
+| `created_at` | `timestamp` | YES | Waktu pendaftaran |
+| `updated_at` | `timestamp` | YES | Waktu pembaruan profil |
 
-**Indeks**: `email` (unique)
+**Indeks**:
+- `users_pkey`: Primary key (`id`)
+- `users_email_unique`: Unique index (`email`)
+
+---
+
+## Tabel: `categories`
+
+| Kolom | Tipe | Nullable | Keterangan |
+|-------|------|----------|-----------|
+| `id` | `bigint` | NO | Primary key, auto-increment |
+| `name` | `varchar(255)` | NO | Nama kategori (mis. Sepeda, Perkakas) |
+| `slug` | `varchar(255)` | NO | Unique slug URL-friendly |
+| `created_at` | `timestamp` | YES | Waktu dibuat |
+| `updated_at` | `timestamp` | YES | Waktu diperbarui |
+
+**Indeks**:
+- `categories_pkey`: Primary key (`id`)
+- `categories_slug_unique`: Unique index (`slug`)
 
 ---
 
@@ -81,58 +114,55 @@ erDiagram
 | Kolom | Tipe | Nullable | Keterangan |
 |-------|------|----------|-----------|
 | `id` | `bigint` | NO | Primary key, auto-increment |
-| `user_id` | `bigint` | NO | FK → users.id |
-| `title` | `varchar(255)` | NO | Nama barang |
-| `description` | `text` | NO | Deskripsi barang |
-| `price` | `bigint` | NO | Harga dalam rupiah (integer, bukan decimal) |
-| `category` | `varchar(100)` | NO | Kategori: Elektronik, Pakaian, Olahraga, dll |
-| `condition` | `varchar(10)` | NO | `new` atau `used` |
-| `location` | `varchar(255)` | NO | Kota/area penjual |
-| `status` | `varchar(20)` | NO | `available` atau `sold` (default: `available`) |
-| `photo_path` | `varchar(255)` | YES | Path relatif di storage |
-| `created_at` | `timestamp` | NO | — |
-| `updated_at` | `timestamp` | NO | — |
-| `deleted_at` | `timestamp` | YES | Soft delete |
+| `user_id` | `bigint` | NO | FK → `users.id` (cascade on delete) |
+| `category_id` | `bigint` | NO | FK → `categories.id` (cascade on delete) |
+| `title` | `varchar(255)` | NO | Judul barang bekas |
+| `description` | `text` | NO | Deskripsi lengkap, kondisi & riwayat |
+| `price` | `bigint` | NO | Harga dalam Rupiah (tanpa desimal) |
+| `condition` | `varchar(255)` | NO | Backed Enum: `new`, `like_new`, `good`, `fair` |
+| `location` | `varchar(255)` | NO | Lokasi barang / penjual |
+| `status` | `varchar(255)` | NO | Backed Enum: `available`, `sold` (default: `available`) |
+| `created_at` | `timestamp` | YES | Waktu dibuat |
+| `updated_at` | `timestamp` | YES | Waktu diperbarui |
 
 **Indeks**:
-- `user_id` (foreign key)
-- `status` (filter)
-- `category` (filter)
-- `condition` (filter)
-- GIN index pada `title` dan `description` via `pg_trgm` untuk search
+- `listings_pkey`: Primary key (`id`)
+- `listings_user_id_index`: B-Tree index pada `user_id` (filter listing milik user)
+- `listings_status_category_id_created_at_index`: Composite B-Tree index `(status, category_id, created_at)` untuk sorting & filter katalog
+- `listings_title_trgm_idx`: GIN index via `pg_trgm` (`gin (title gin_trgm_ops)`) untuk pencarian full-text / substring `ILIKE` super cepat
 
 ---
 
-## Kategori Barang
+## Tabel: `listing_images`
 
-Kategori disimpan sebagai string (bukan tabel terpisah) untuk fleksibilitas MVP:
+| Kolom | Tipe | Nullable | Keterangan |
+|-------|------|----------|-----------|
+| `id` | `bigint` | NO | Primary key, auto-increment |
+| `listing_id` | `bigint` | NO | FK → `listings.id` (cascade on delete) |
+| `path` | `varchar(255)` | NO | Path relatif storage atau URL gambar dummy |
+| `position` | `integer` | NO | Urutan tampilan foto (default: `0`) |
+| `created_at` | `timestamp` | YES | Waktu dibuat |
+| `updated_at` | `timestamp` | YES | Waktu diperbarui |
 
-- Elektronik
-- Pakaian
-- Olahraga
-- Rumah Tangga
-- Kendaraan
-- Buku & Alat Tulis
-- Mainan & Hobi
-- Lainnya
-
----
-
-## Migrasi
-
-Urutan file migration Laravel:
-
-1. `create_users_table` (default Laravel)
-2. `create_personal_access_tokens_table` (Sanctum)
-3. `create_listings_table`
-4. `add_pg_trgm_extension` (enable ekstensi PostgreSQL)
-5. `add_trgm_indexes_to_listings` (GIN index untuk search)
+**Indeks**:
+- `listing_images_pkey`: Primary key (`id`)
+- `listing_images_listing_id_position_index`: Composite index `(listing_id, position)`
 
 ---
 
-## Catatan Teknis
+## Tabel: `personal_access_tokens`
 
-- Harga disimpan sebagai `bigint` (bukan `decimal`) karena semua transaksi dalam rupiah bulat — hindari masalah floating point.
-- `photo_path` menyimpan path relatif dari `storage/app/public`, bukan URL lengkap — URL di-generate via `Storage::url()`.
-- Soft delete pada `listings` agar riwayat dapat di-audit dan data tidak hilang permanen.
-- Tidak ada tabel `categories` terpisah di MVP — cukup enum/string. Jika kategori perlu multilevel atau attribute berbeda per kategori, pertimbangkan tabel categories di future work.
+Tabel bawaan Laravel Sanctum untuk opsi fallback token API jika dibutuhkan.
+
+---
+
+## 8 Kategori Standar (Seeded)
+
+1. **Sepeda** (`sepeda`)
+2. **Perkakas** (`perkakas`)
+3. **Hobi** (`hobi`)
+4. **Elektronik** (`elektronik`)
+5. **Rumah Tangga** (`rumah-tangga`)
+6. **Otomotif** (`otomotif`)
+7. **Olahraga** (`olahraga`)
+8. **Lainnya** (`lainnya`)
