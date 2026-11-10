@@ -1,65 +1,398 @@
-import React from 'react'
-import { Link } from 'react-router'
-import { PlusCircle, Search, ShieldCheck } from 'lucide-react'
-import { useAuth } from '../features/auth/useAuth'
+import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
+import {
+  AlertCircle,
+  ArrowUpDown,
+  Filter,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react'
+import { getListingsApi } from '../api/listings'
+import { getCategoriesApi } from '../api/categories'
+import { ListingCard } from '../components/ListingCard'
+import { ListingCardSkeleton } from '../components/Skeleton'
+import { EmptyState } from '../components/EmptyState'
+import { Button } from '../components/Button'
+import { useDebounce } from '../lib/useDebounce'
+
+const CONDITIONS = [
+  { value: '', label: 'Semua Kondisi' },
+  { value: 'new', label: 'Baru' },
+  { value: 'like_new', label: 'Seperti Baru' },
+  { value: 'good', label: 'Bagus / Mulus' },
+  { value: 'fair', label: 'Cukup / Wajar' },
+]
+
+const SORT_OPTIONS = [
+  { value: 'latest', label: 'Terbaru' },
+  { value: 'price_asc', label: 'Harga: Rendah ke Tinggi' },
+  { value: 'price_desc', label: 'Harga: Tinggi ke Rendah' },
+  { value: 'oldest', label: 'Terlama' },
+]
 
 export const Home: React.FC = () => {
-  const { user, isAuthenticated } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Ambil state dari URL query string
+  const urlQ = searchParams.get('q') || ''
+  const selectedCategory = searchParams.get('category') || ''
+  const selectedCondition = searchParams.get('condition') || ''
+  const selectedSort = searchParams.get('sort') || 'latest'
+  const currentPage = parseInt(searchParams.get('page') || '1', 10)
+
+  // Local state untuk input search agar responsif saat mengetik
+  const [searchInput, setSearchInput] = useState(urlQ)
+  const debouncedSearch = useDebounce(searchInput, 400)
+
+  // Sinkronisasi debounced search ke URL query params
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (debouncedSearch.trim()) {
+          next.set('q', debouncedSearch.trim())
+        } else {
+          next.delete('q')
+        }
+        // Reset page ke 1 setiap kali query pencarian berubah
+        if (prev.get('q') !== (debouncedSearch.trim() || null)) {
+          next.delete('page')
+        }
+        return next
+      },
+      { replace: true }
+    )
+  }, [debouncedSearch, setSearchParams])
+
+  // Sinkronisasi jika URL berubah dari luar (misal tombol back browser)
+  useEffect(() => {
+    setSearchInput(urlQ)
+  }, [urlQ])
+
+  // Fetch daftar kategori (cache Redis di backend)
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategoriesApi,
+    staleTime: 1000 * 60 * 10, // 10 menit di client
+  })
+
+  // Fetch listings berdasarkan filter saat ini
+  const {
+    data: listingsResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: [
+      'listings',
+      {
+        q: urlQ,
+        category: selectedCategory,
+        condition: selectedCondition,
+        sort: selectedSort,
+        page: currentPage,
+      },
+    ],
+    queryFn: () =>
+      getListingsApi({
+        q: urlQ,
+        category: selectedCategory,
+        condition: selectedCondition,
+        sort: selectedSort,
+        page: currentPage,
+      }),
+  })
+
+  const listings = listingsResponse?.data || []
+  const meta = listingsResponse?.meta
+
+  // Helper untuk update parameter URL
+  const updateParam = (key: string, value: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (value && value !== '' && !(key === 'sort' && value === 'latest')) {
+        next.set(key, value)
+      } else {
+        next.delete(key)
+      }
+      next.delete('page') // Reset pagination ke halaman 1
+      return next
+    })
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (newPage > 1) {
+        next.set('page', newPage.toString())
+      } else {
+        next.delete('page')
+      }
+      return next
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleResetFilters = () => {
+    setSearchInput('')
+    setSearchParams({}, { replace: true })
+  }
+
+  const hasActiveFilters = !!(
+    urlQ ||
+    selectedCategory ||
+    selectedCondition ||
+    (selectedSort && selectedSort !== 'latest')
+  )
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Welcome Hero */}
-      <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-10 shadow-sm mb-8">
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium mb-4">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Pasar Warga Komunitas Terpercaya</span>
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+      {/* Search Bar & Header Kontrol */}
+      <div className="mb-6 space-y-4">
+        {/* Search Input Box */}
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+            <Search className="w-5 h-5" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 leading-tight">
-            {isAuthenticated ? (
-              <>
-                Halo, <span className="text-indigo-600">{user?.name}</span>!
-              </>
-            ) : (
-              'Jual Beli Barang Bekas Antar Warga'
-            )}
-          </h1>
-          <p className="mt-3 text-base text-zinc-600 leading-relaxed">
-            Temukan sepeda, perkakas, hobi, dan barang rumah tangga berkualitas dari tetangga sekitar. Langsung terhubung via WhatsApp tanpa ribet.
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              to="/pasang"
-              className="h-10 px-5 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 transition-colors"
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Cari sepeda, perkakas, elektronik, hobi..."
+            className="w-full h-12 pl-11 pr-10 bg-white text-zinc-900 text-sm sm:text-base rounded-xl border border-zinc-200 hover:border-zinc-300 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 shadow-xs transition-colors"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('')
+                updateParam('q', null)
+              }}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 cursor-pointer"
+              title="Hapus pencarian"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>Pasang Barang Sekarang</span>
-            </Link>
-            {!isAuthenticated && (
-              <Link
-                to="/login"
-                className="h-10 px-5 inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-800 font-medium text-sm hover:bg-zinc-50 transition-colors"
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Kategori Horizontal Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => updateParam('category', null)}
+            className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+              !selectedCategory
+                ? 'bg-zinc-900 text-white shadow-xs'
+                : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50'
+            }`}
+          >
+            Semua
+          </button>
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat.slug
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => updateParam('category', isSelected ? null : cat.slug)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-zinc-900 text-white shadow-xs'
+                    : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50'
+                }`}
               >
-                Masuk ke Akun
-              </Link>
+                {cat.name}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Filter Baris Kedua: Kondisi, Pengurutan, dan Reset */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-zinc-100">
+          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+            {/* Filter Kondisi */}
+            <div className="flex items-center gap-1.5 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
+              <Filter className="w-3.5 h-3.5 text-zinc-400" />
+              <select
+                value={selectedCondition}
+                onChange={(e) => updateParam('condition', e.target.value)}
+                className="bg-transparent text-zinc-700 text-xs sm:text-sm font-medium focus:outline-none cursor-pointer"
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Pengurutan (Sort) */}
+            <div className="flex items-center gap-1.5 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
+              <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400" />
+              <select
+                value={selectedSort}
+                onChange={(e) => updateParam('sort', e.target.value)}
+                className="bg-transparent text-zinc-700 text-xs sm:text-sm font-medium focus:outline-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tombol Reset jika ada filter aktif */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1 cursor-pointer"
+              >
+                <SlidersHorizontal className="w-3 h-3" />
+                <span>Reset Filter</span>
+              </button>
+            )}
+          </div>
+
+          {/* Indikator Status & Total */}
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            {isFetching && !isLoading && (
+              <span className="inline-flex items-center gap-1 text-indigo-600">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Memperbarui...</span>
+              </span>
+            )}
+            {meta && !isLoading && (
+              <span>
+                Total <strong className="text-zinc-900">{meta.total}</strong> barang
+              </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Placeholder for Phase 3: Search & Listings */}
-      <div className="border border-dashed border-zinc-300 rounded-xl p-8 text-center bg-zinc-50/50">
-        <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 mx-auto flex items-center justify-center mb-3">
-          <Search className="w-6 h-6" />
+      {/* Konten Utama: Loading Skeleton / Error / Empty / Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+          {Array.from({ length: 12 }).map((_, idx) => (
+            <ListingCardSkeleton key={idx} />
+          ))}
         </div>
-        <h3 className="text-base font-semibold text-zinc-900">
-          Katalog Listing Publik (Fase 3)
-        </h3>
-        <p className="text-sm text-zinc-500 max-w-md mx-auto mt-1">
-          Pencarian trigram, filter kategori, dan kartu listing barang akan aktif pada Fase 3.
-        </p>
-      </div>
+      ) : isError ? (
+        <div className="border border-red-200 bg-red-50/50 rounded-2xl p-8 text-center max-w-md mx-auto my-12">
+          <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-zinc-900">
+            Gagal Memuat Daftar Barang
+          </h3>
+          <p className="text-xs sm:text-sm text-zinc-600 mt-1 mb-5">
+            {error instanceof Error
+              ? error.message
+              : 'Terjadi gangguan koneksi ke server. Silakan coba kembali.'}
+          </p>
+          <Button variant="primary" size="sm" onClick={() => refetch()}>
+            Coba Lagi
+          </Button>
+        </div>
+      ) : listings.length === 0 ? (
+        <EmptyState
+          title={
+            urlQ
+              ? `Tidak ditemukan hasil untuk "${urlQ}"`
+              : 'Belum ada barang pada kategori ini'
+          }
+          description="Coba ubah kata kunci pencarian atau sesuaikan filter untuk melihat barang yang tersedia."
+          actionLabel={hasActiveFilters ? 'Reset Semua Filter' : undefined}
+          onAction={hasActiveFilters ? handleResetFilters : undefined}
+          className="my-8"
+        />
+      ) : (
+        <>
+          {/* Grid Barang */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            {listings.map((item) => (
+              <ListingCard key={item.id} listing={item} />
+            ))}
+          </div>
+
+          {/* Kontrol Paginasi */}
+          {meta && meta.last_page > 1 && (
+            <div className="mt-10 pt-6 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs sm:text-sm text-zinc-500 text-center sm:text-left">
+                Menampilkan <strong>{meta.from || 0}</strong> -{' '}
+                <strong>{meta.to || 0}</strong> dari{' '}
+                <strong>{meta.total}</strong> barang
+              </p>
+
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  Sebelumnya
+                </Button>
+
+                {/* Halaman Paginasi */}
+                <div className="flex items-center gap-1 px-1">
+                  {Array.from({ length: meta.last_page }).map((_, i) => {
+                    const pageNum = i + 1
+                    // Tampilkan maksimal 5 tombol halaman di sekitar halaman aktif
+                    if (
+                      pageNum === 1 ||
+                      pageNum === meta.last_page ||
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      const isActive = pageNum === currentPage
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            isActive
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    }
+                    if (
+                      pageNum === currentPage - 2 ||
+                      pageNum === currentPage + 2
+                    ) {
+                      return (
+                        <span key={pageNum} className="text-zinc-400 px-1 text-xs">
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage >= meta.last_page}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

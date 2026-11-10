@@ -6,6 +6,7 @@ import { Navbar } from './components/Navbar'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { GuestRoute } from './components/GuestRoute'
 import { Home } from './pages/Home'
+import { ListingDetail } from './pages/ListingDetail'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { ListingForm } from './pages/ListingForm'
@@ -33,6 +34,7 @@ export const App: React.FC = () => {
               <Routes>
                 {/* Halaman Publik */}
                 <Route path="/" element={<Home />} />
+                <Route path="/listings/:id" element={<ListingDetail />} />
 
                 {/* Halaman Tamu (Guest only) */}
                 <Route
