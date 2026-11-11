@@ -16,7 +16,8 @@ Dokumen ini mencatat status pengerjaan, ringkasan keputusan, akun demo, instruks
 | **Fase 4b** | Frontend Form Pasang & Edit Barang | **Selesai** | Halaman `/pasang` & `/listings/:id/edit`, validasi Zod client-server parity, preview foto, delete image, sinkronisasi select kategori/kondisi. |
 | **Fase 4c** | Frontend Listing Saya (`/me/listings`) & Profil (`/users/:id`) | **Selesai** | Kelola status (Tersedia/Terjual), hapus konfirmasi dialog, navigasi edit, profil publik dengan grid listing, tanpa email/nomor HP demi privasi, tautan profil penjual di detail barang. |
 | **Fase 5** | Polish, UI Audit, Responsive Layout, State Consistency | **Selesai** | Audit palet zinc + indigo, 1 kolom di HP, navbar responsif tanpa overflow, state skeleton/error/coba-lagi/empty, browser title per halaman, SVG favicon, keyboard focus ring. |
-| **Docs** | Finalisasi `/write-docs` & `/final-check` | **Berikutnya** | Melengkapi dokumen teknis dan verifikasi akhir. |
+| **Docs** | Finalisasi Dokumentasi Teknis (`/write-docs`) | **Selesai** | Seluruh dokumen di `/docs` (arsitektur, scaling 100k DAU, security, database ERD, API spesifikasi, ADR + future work, operations) dan README.md telah lengkap. |
+| **Final** | Verifikasi Akhir (`/final-check`) | **Berikutnya** | Verifikasi test, lint, build, dan tangkapan layar screenshot. |
 
 ---
 
