@@ -1,12 +1,12 @@
-# Skema Database
+# Desain & Skema Basis Data
 
-Database: **PostgreSQL 16**
-
-Seluruh skema diimplementasikan melalui Laravel 12 migrations dengan optimasi query index (composite index & GIN pg_trgm).
+Dokumen ini menjelaskan struktur data relasional, Entity Relationship Diagram (ERD), kolom-kolom penting, serta strategi pengindeksan pada basis data **PostgreSQL 16**.
 
 ---
 
-## ERD (Entity Relationship Diagram)
+## 1. Entity Relationship Diagram (ERD)
+
+Diagram ERD berikut memetakan seluruh tabel yang terdapat pada sistem:
 
 ```mermaid
 erDiagram
@@ -73,96 +73,77 @@ erDiagram
 
 ---
 
-## Tabel: `users`
+## 2. Struktur Tabel & Field Penting
 
-| Kolom | Tipe | Nullable | Keterangan |
-|-------|------|----------|-----------|
-| `id` | `bigint` | NO | Primary key, auto-increment |
-| `name` | `varchar(255)` | NO | Nama lengkap pengguna |
-| `email` | `varchar(255)` | NO | Unique, kredensial login |
-| `password` | `varchar(255)` | NO | Hash password (bcrypt) |
-| `phone` | `varchar(255)` | NO | Nomor WhatsApp (format 62xxxxxxxxxx) |
-| `location` | `varchar(255)` | NO | Lokasi / kota domisili pengguna |
-| `remember_token` | `varchar(100)` | YES | Token remember me Laravel |
-| `created_at` | `timestamp` | YES | Waktu pendaftaran |
-| `updated_at` | `timestamp` | YES | Waktu pembaruan profil |
+### A. Tabel: `users`
+Menyimpan akun pengguna terdaftar (penjual dan pembeli).
 
-**Indeks**:
-- `users_pkey`: Primary key (`id`)
-- `users_email_unique`: Unique index (`email`)
+| Nama Kolom | Tipe Data | Nullable | Keterangan & Aturan |
+|---|---|---|---|
+| `id` | `bigint` (Auto Increment) | NO | Primary Key. Identitas unik pengguna. |
+| `name` | `varchar(255)` | NO | Nama lengkap pengguna untuk tampilan publik. |
+| `email` | `varchar(255)` | NO | Unique. Alamat surel untuk kredensial login. |
+| `password` | `varchar(255)` | NO | Hash kata sandi terenkripsi (Argon2id/Bcrypt). |
+| `phone` | `varchar(255)` | NO | Nomor WhatsApp aktif (format internasional `628...`). |
+| `location` | `varchar(255)` | NO | Kota / daerah domisili pengguna (misal: "Bandung, Jawa Barat"). |
+| `remember_token` | `varchar(100)` | YES | Token sesi "Ingat Saya" bawaan Laravel. |
+| `created_at` | `timestamp` | YES | Waktu pendaftaran akun (ditampilkan sebagai "Bergabung sejak"). |
+| `updated_at` | `timestamp` | YES | Waktu pembaruan profil pengguna. |
 
----
+### B. Tabel: `categories`
+Menyimpan taksonomi kategori barang bekas (dikelola melalui seeder).
 
-## Tabel: `categories`
+| Nama Kolom | Tipe Data | Nullable | Keterangan & Aturan |
+|---|---|---|---|
+| `id` | `bigint` (Auto Increment) | NO | Primary Key. Identitas unik kategori. |
+| `name` | `varchar(255)` | NO | Nama kategori yang tampil di UI (contoh: "Perkakas & Otomotif"). |
+| `slug` | `varchar(255)` | NO | Unique. Identifier URL-friendly (contoh: `perkakas-otomotif`). |
+| `created_at` | `timestamp` | YES | Waktu pembuatan kategori. |
+| `updated_at` | `timestamp` | YES | Waktu pembaruan kategori. |
 
-| Kolom | Tipe | Nullable | Keterangan |
-|-------|------|----------|-----------|
-| `id` | `bigint` | NO | Primary key, auto-increment |
-| `name` | `varchar(255)` | NO | Nama kategori (mis. Sepeda, Perkakas) |
-| `slug` | `varchar(255)` | NO | Unique slug URL-friendly |
-| `created_at` | `timestamp` | YES | Waktu dibuat |
-| `updated_at` | `timestamp` | YES | Waktu diperbarui |
+### C. Tabel: `listings`
+Tabel entitas utama yang memuat data barang bekas yang dipasang.
 
-**Indeks**:
-- `categories_pkey`: Primary key (`id`)
-- `categories_slug_unique`: Unique index (`slug`)
+| Nama Kolom | Tipe Data | Nullable | Keterangan & Aturan |
+|---|---|---|---|
+| `id` | `bigint` (Auto Increment) | NO | Primary Key. Identitas unik barang. |
+| `user_id` | `bigint` (Foreign Key) | NO | Relasi ke `users.id` (`ON DELETE CASCADE`). Pemilik barang. |
+| `category_id` | `bigint` (Foreign Key) | NO | Relasi ke `categories.id` (`ON DELETE CASCADE`). Kategori barang. |
+| `title` | `varchar(255)` | NO | Judul barang yang dicari pengguna (diindeks Trigram). |
+| `description` | `text` | NO | Deskripsi detail kondisi, alasan jual, dan kelengkapan barang. |
+| `price` | `unsignedBigInteger` | NO | Nilai harga barang dalam satuan Rupiah bulat. |
+| `condition` | `varchar(255)` | NO | Status kondisi barang (`new`, `like_new`, `good`, `fair`). |
+| `location` | `varchar(255)` | NO | Lokasi COD / pengambilan barang (misal: "Tebet, Jakarta Selatan"). |
+| `status` | `varchar(255)` | NO | Status ketersediaan barang (`available` atau `sold`). Default: `available`. |
+| `created_at` | `timestamp` | YES | Waktu pemasangan iklan barang. Digunakan untuk sorting terbaru. |
+| `updated_at` | `timestamp` | YES | Waktu pembaruan barang atau perubahan status. |
 
----
+### D. Tabel: `listing_images`
+Menyimpan galeri foto berkas (1 barang dapat memiliki 0 hingga 5 foto).
 
-## Tabel: `listings`
+| Nama Kolom | Tipe Data | Nullable | Keterangan & Aturan |
+|---|---|---|---|
+| `id` | `bigint` (Auto Increment) | NO | Primary Key. Identitas unik berkas foto. |
+| `listing_id` | `bigint` (Foreign Key) | NO | Relasi ke `listings.id` (`ON DELETE CASCADE`). |
+| `path` | `varchar(255)` | NO | Path relatif penyimpanan berkas (contoh: `listings/uuid.webp`). |
+| `position` | `unsignedInteger` | NO | Urutan tampilan foto (default `0`). Posisi 0 bertindak sebagai cover/foto utama. |
+| `created_at` | `timestamp` | YES | Waktu pengunggahan foto. |
+| `updated_at` | `timestamp` | YES | Waktu pembaruan rekaman foto. |
 
-| Kolom | Tipe | Nullable | Keterangan |
-|-------|------|----------|-----------|
-| `id` | `bigint` | NO | Primary key, auto-increment |
-| `user_id` | `bigint` | NO | FK → `users.id` (cascade on delete) |
-| `category_id` | `bigint` | NO | FK → `categories.id` (cascade on delete) |
-| `title` | `varchar(255)` | NO | Judul barang bekas |
-| `description` | `text` | NO | Deskripsi lengkap, kondisi & riwayat |
-| `price` | `bigint` | NO | Harga dalam Rupiah (tanpa desimal) |
-| `condition` | `varchar(255)` | NO | Backed Enum: `new`, `like_new`, `good`, `fair` |
-| `location` | `varchar(255)` | NO | Lokasi barang / penjual |
-| `status` | `varchar(255)` | NO | Backed Enum: `available`, `sold` (default: `available`) |
-| `created_at` | `timestamp` | YES | Waktu dibuat |
-| `updated_at` | `timestamp` | YES | Waktu diperbarui |
-
-**Indeks**:
-- `listings_pkey`: Primary key (`id`)
-- `listings_user_id_index`: B-Tree index pada `user_id` (filter listing milik user)
-- `listings_status_category_id_created_at_index`: Composite B-Tree index `(status, category_id, created_at)` untuk sorting & filter katalog
-- `listings_title_trgm_idx`: GIN index via `pg_trgm` (`gin (title gin_trgm_ops)`) untuk pencarian full-text / substring `ILIKE` super cepat
-
----
-
-## Tabel: `listing_images`
-
-| Kolom | Tipe | Nullable | Keterangan |
-|-------|------|----------|-----------|
-| `id` | `bigint` | NO | Primary key, auto-increment |
-| `listing_id` | `bigint` | NO | FK → `listings.id` (cascade on delete) |
-| `path` | `varchar(255)` | NO | Path relatif storage atau URL gambar dummy |
-| `position` | `integer` | NO | Urutan tampilan foto (default: `0`) |
-| `created_at` | `timestamp` | YES | Waktu dibuat |
-| `updated_at` | `timestamp` | YES | Waktu diperbarui |
-
-**Indeks**:
-- `listing_images_pkey`: Primary key (`id`)
-- `listing_images_listing_id_position_index`: Composite index `(listing_id, position)`
+### E. Tabel: `personal_access_tokens`
+Disediakan oleh generator `php artisan install:api` Laravel 12. Dicatat dalam ADR-010 sebagai tabel cadangan untuk integrasi mobile native di masa depan, saat ini tidak digunakan pada alur web SPA cookie.
 
 ---
 
-## Tabel: `personal_access_tokens`
+## 3. Strategi Indexing & Alasan Teknis
 
-Tabel bawaan Laravel Sanctum untuk opsi fallback token API jika dibutuhkan.
+Seluruh indeks dibuat secara presisi untuk mengoptimalkan pola kueri akses tertinggi:
 
----
-
-## 8 Kategori Standar (Seeded)
-
-1. **Sepeda** (`sepeda`)
-2. **Perkakas** (`perkakas`)
-3. **Hobi** (`hobi`)
-4. **Elektronik** (`elektronik`)
-5. **Rumah Tangga** (`rumah-tangga`)
-6. **Otomotif** (`otomotif`)
-7. **Olahraga** (`olahraga`)
-8. **Lainnya** (`lainnya`)
+| Nama Indeks | Tabel | Definisi Kolom | Tipe Indeks | Alasan Teknis & Kasus Penggunaan |
+|---|---|---|---|---|
+| `listings_title_trgm_idx` | `listings` | `title gin_trgm_ops` | **GIN (Trigram)** | Mengoptimalkan pencarian parsial teks (`ILIKE '%keyword%'`) via ekstensi PostgreSQL `pg_trgm`. Menghindari *full table scan* dan memberikan pencarian instan pada ratusan ribu data. |
+| `listings_status_category_id_created_at_index` | `listings` | `(status, category_id, created_at)` | **B-Tree (Composite)** | Mengoptimalkan kueri utama beranda: menyaring barang yang masih tersedia (`status = 'available'`), memfilter kategori tertentu, dan mengurutkan berdasarkan waktu terbaru (`created_at DESC`) dalam satu kali traversal indeks. |
+| `listings_user_id_index` | `listings` | `(user_id)` | **B-Tree** | Mempercepat kueri relasi pada halaman "Listing Saya" (`/me/listings`) dan profil publik penjual (`/users/:id`), serta operasi cascading delete. |
+| `listing_images_listing_id_position_index` | `listing_images` | `(listing_id, position)` | **B-Tree (Composite)** | Menjamin pengambilan galeri foto barang terurut berdasarkan posisi urutan secara instan, terutama untuk mengambil foto cover (posisi 0) pada kueri grid listing. |
+| `users_email_unique` | `users` | `(email)` | **B-Tree (Unique)** | Menjamin integritas tidak adanya duplikasi alamat surel dan mempercepat verifikasi kredensial login pengguna. |
+| `categories_slug_unique` | `categories` | `(slug)` | **B-Tree (Unique)** | Mempercepat pembacaan filter kategori berdasarkan parameter slug URL (contoh: `/listings?category=elektronik`). |
