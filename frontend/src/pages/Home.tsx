@@ -5,6 +5,8 @@ import {
   AlertCircle,
   ArrowUpDown,
   Filter,
+  LayoutGrid,
+  LayoutList,
   RefreshCw,
   Search,
   SlidersHorizontal,
@@ -13,7 +15,8 @@ import {
 import { getListingsApi } from '../api/listings'
 import { getCategoriesApi } from '../api/categories'
 import { ListingCard } from '../components/ListingCard'
-import { ListingCardSkeleton } from '../components/Skeleton'
+import { ListingRow } from '../components/ListingRow'
+import { ListingCardSkeleton, ListingRowSkeleton } from '../components/Skeleton'
 import { EmptyState } from '../components/EmptyState'
 import { Button } from '../components/Button'
 import { useDebounce } from '../lib/useDebounce'
@@ -33,12 +36,56 @@ const SORT_OPTIONS = [
   { value: 'oldest', label: 'Terlama' },
 ]
 
+const VIEW_STORAGE_KEY = 'pasar_warga_view_mode'
+
+function readStoredView(): 'grid' | 'list' {
+  try {
+    const stored = localStorage.getItem(VIEW_STORAGE_KEY)
+    if (stored === 'list' || stored === 'grid') return stored
+  } catch {
+    // ignore storage errors (private browsing, quota, etc.)
+  }
+  return 'grid'
+}
+
+function writeStoredView(view: 'grid' | 'list') {
+  try {
+    localStorage.setItem(VIEW_STORAGE_KEY, view)
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export const Home: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
     document.title = 'PasarWarga — Marketplace Barang Bekas Komunitas'
   }, [])
+
+  // ── View mode (grid / list) ──────────────────────────────────────────────────
+  // Priority: URL param (?view=list) > localStorage > default 'grid'
+  const urlView = searchParams.get('view')
+  const initialView: 'grid' | 'list' =
+    urlView === 'list' || urlView === 'grid' ? urlView : readStoredView()
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialView)
+
+  const handleViewChange = (mode: 'grid' | 'list') => {
+    setViewMode(mode)
+    writeStoredView(mode)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (mode === 'list') {
+          next.set('view', 'list')
+        } else {
+          next.delete('view')
+        }
+        return next
+      },
+      { replace: true }
+    )
+  }
 
   // Ambil state dari URL query string
   const urlQ = searchParams.get('q') || ''
@@ -75,6 +122,14 @@ export const Home: React.FC = () => {
   useEffect(() => {
     setSearchInput(urlQ)
   }, [urlQ])
+
+  // Sinkronisasi viewMode jika param ?view berubah dari luar
+  useEffect(() => {
+    const param = searchParams.get('view')
+    if (param === 'list' || param === 'grid') {
+      setViewMode(param)
+    }
+  }, [searchParams])
 
   // Fetch daftar kategori (cache Redis di backend)
   const { data: categories = [] } = useQuery({
@@ -144,7 +199,7 @@ export const Home: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchInput('')
-    setSearchParams({}, { replace: true })
+    setSearchParams(viewMode === 'list' ? { view: 'list' } : {}, { replace: true })
   }
 
   const hasActiveFilters = !!(
@@ -219,7 +274,7 @@ export const Home: React.FC = () => {
           })}
         </div>
 
-        {/* Filter Baris Kedua: Kondisi, Pengurutan, dan Reset */}
+        {/* Filter Baris Kedua: Kondisi, Pengurutan, Toggle View, dan Reset */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-zinc-100">
           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
             {/* Filter Kondisi */}
@@ -269,30 +324,75 @@ export const Home: React.FC = () => {
             )}
           </div>
 
-          {/* Indikator Status & Total */}
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
-            {isFetching && !isLoading && (
-              <span className="inline-flex items-center gap-1 text-indigo-600">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                <span>Memperbarui...</span>
-              </span>
-            )}
-            {meta && !isLoading && (
-              <span>
-                Total <strong className="text-zinc-900">{meta.total}</strong> barang
-              </span>
-            )}
+          {/* Kanan: Indikator Status + Toggle Tampilan */}
+          <div className="flex items-center gap-3">
+            {/* Indikator Status & Total */}
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              {isFetching && !isLoading && (
+                <span className="inline-flex items-center gap-1 text-indigo-600">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Memperbarui...</span>
+                </span>
+              )}
+              {meta && !isLoading && (
+                <span>
+                  Total <strong className="text-zinc-900">{meta.total}</strong> barang
+                </span>
+              )}
+            </div>
+
+            {/* Segmented Control: Grid / List Toggle */}
+            <div
+              className="flex items-center rounded-lg border border-zinc-200 overflow-hidden shadow-2xs bg-white"
+              role="group"
+              aria-label="Pilih tampilan"
+            >
+              <button
+                type="button"
+                onClick={() => handleViewChange('grid')}
+                aria-label="Tampilan grid"
+                aria-pressed={viewMode === 'grid'}
+                className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-inset ${
+                  viewMode === 'grid'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewChange('list')}
+                aria-label="Tampilan list"
+                aria-pressed={viewMode === 'list'}
+                className={`flex items-center justify-center w-8 h-8 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-inset border-l border-zinc-200 ${
+                  viewMode === 'list'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Konten Utama: Loading Skeleton / Error / Empty / Grid */}
+      {/* Konten Utama: Loading Skeleton / Error / Empty / Grid or List */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          {Array.from({ length: 12 }).map((_, idx) => (
-            <ListingCardSkeleton key={idx} />
-          ))}
-        </div>
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            {Array.from({ length: 12 }).map((_, idx) => (
+              <ListingCardSkeleton key={idx} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {Array.from({ length: 12 }).map((_, idx) => (
+              <ListingRowSkeleton key={idx} />
+            ))}
+          </div>
+        )
       ) : isError ? (
         <div className="border border-red-200 bg-red-50/50 rounded-xl p-8 text-center max-w-md mx-auto my-12">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
@@ -322,12 +422,20 @@ export const Home: React.FC = () => {
         />
       ) : (
         <>
-          {/* Grid Barang */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-            {listings.map((item) => (
-              <ListingCard key={item.id} listing={item} />
-            ))}
-          </div>
+          {/* Grid atau List Barang */}
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+              {listings.map((item) => (
+                <ListingCard key={item.id} listing={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {listings.map((item) => (
+                <ListingRow key={item.id} listing={item} />
+              ))}
+            </div>
+          )}
 
           {/* Kontrol Paginasi */}
           {meta && meta.last_page > 1 && (

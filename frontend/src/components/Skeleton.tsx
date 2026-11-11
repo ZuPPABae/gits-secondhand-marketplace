@@ -29,3 +29,20 @@ export const ListingCardSkeleton: React.FC = () => {
   )
 }
 
+export const ListingRowSkeleton: React.FC = () => {
+  return (
+    <div className="bg-white rounded-xl border border-zinc-200 p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+      <Skeleton className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <Skeleton className="h-4 w-3/4 rounded" />
+        <Skeleton className="h-5 w-1/3 rounded" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-16 rounded" />
+          <Skeleton className="h-4 w-24 rounded" />
+        </div>
+      </div>
+      <Skeleton className="hidden sm:block h-4 w-20 rounded flex-shrink-0" />
+    </div>
+  )
+}
+

@@ -16,7 +16,7 @@ src/
 ```
 
 ## Halaman & perilaku
-- Home: grid listing (foto, nama, harga Rupiah, kondisi, lokasi), search (debounce 400 ms), filter kategori & kondisi, pagination. State filter disimpan di URL query string.
+- Home: grid/list listing (toggle segmented control ikon Grid/List, state di URL `?view=list` dan localStorage `pasar_warga_view_mode`), foto, nama, harga Rupiah, kondisi, lokasi; search (debounce 400 ms), filter kategori & kondisi, pagination. State filter disimpan di URL query string. Mode list menggunakan komponen `ListingRow`, mode grid menggunakan `ListingCard`. Skeleton loading mengikuti mode aktif.
 - Detail: galeri foto, harga, deskripsi, kondisi, lokasi, info penjual, tombol "Hubungi via WhatsApp" membuka `https://wa.me/<phone>?text=<encodeURIComponent(pesan)>`. Pesan awal: "Halo, saya tertarik dengan *{judul}* seharga {harga} di marketplace komunitas. Apakah masih tersedia?" Jika status `sold`, tampilkan badge "Terjual" dan nonaktifkan tombol.
 - Form pasang/edit: validasi client (zod) mencerminkan validasi server, preview foto, tampilkan error server per field.
 - Listing Saya: daftar milik sendiri dengan aksi Edit, Hapus (dengan konfirmasi), Tandai Terjual/Tersedia.

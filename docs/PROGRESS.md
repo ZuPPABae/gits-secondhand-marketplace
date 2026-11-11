@@ -86,4 +86,13 @@ docker exec -i marketplace_frontend npm run build
    - Halaman Listing Saya (`/me/listings`): tombol aksi tiap item dirapikan menjadi satu baris sejajar rata kanan di desktop (Edit, Tandai Status, Hapus ikon) dan tersusun rapi dengan lebar sama di mobile.
    - Konfigurasi Demo WhatsApp: seluruh user demo menggunakan nomor placeholder `628000000000` via `config/demo.php` (`whatsapp_number`), dapat ditimpa via `DEMO_WHATSAPP_NUMBER`. Dokumentasi di `.agent/rules/backend-laravel.md`, `README.md`, dan `docs/operations.md` telah diperbarui.
 
+6. **Toggle Tampilan Grid/List di Halaman Home**:
+   - Komponen baru `ListingRow` di `frontend/src/components/ListingRow.tsx`: tampilan baris horizontal (foto kecil kiri, judul, harga, kondisi, lokasi, badge) tanpa duplikasi kode.
+   - Skeleton baru `ListingRowSkeleton` di `Skeleton.tsx` mengikuti layout baris.
+   - Segmented control dua tombol ikon (LayoutGrid/LayoutList lucide-react) dengan `aria-label` dan `aria-pressed`, tombol aktif berwarna indigo.
+   - State view disimpan di URL `?view=list` dan `localStorage` key `pasar_warga_view_mode` (dibungkus try/catch).
+   - Skeleton loading mengikuti mode aktif (grid vs list).
+   - `.agent/rules/frontend-react.md` diperbarui pada bagian Home.
+
+
 
