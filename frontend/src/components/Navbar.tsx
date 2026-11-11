@@ -28,13 +28,13 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-zinc-200">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-2.5 xs:px-4 h-16 flex items-center justify-between gap-2 xs:gap-4">
         {/* Brand / Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold shadow-sm transition-transform group-hover:scale-105">
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold shadow-sm transition-transform group-hover:scale-105 flex-shrink-0">
             <ShoppingBag className="w-5 h-5" />
           </div>
-          <div className="flex flex-col">
+          <div className="hidden min-[400px]:flex flex-col">
             <span className="font-semibold text-zinc-900 tracking-tight leading-tight">
               PasarWarga
             </span>
@@ -45,34 +45,34 @@ export const Navbar: React.FC = () => {
         </Link>
 
         {/* Dynamic Navigation Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0">
           {isLoading ? (
-            <div className="h-9 w-20 sm:w-24 bg-zinc-100 rounded-lg animate-pulse" />
+            <div className="h-9 w-16 sm:w-24 bg-zinc-100 rounded-lg animate-pulse" />
           ) : !isAuthenticated ? (
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
               <Link
                 to="/login"
-                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                className="h-10 px-2.5 xs:px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               >
                 Masuk
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                className="h-10 px-2.5 xs:px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               >
                 Daftar
               </Link>
             </div>
           ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3">
               {/* Pasang Barang CTA */}
               <Link
                 to="/pasang"
-                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center gap-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+                aria-label="Pasang Barang"
+                className="h-10 w-10 sm:w-auto px-0 sm:px-4 inline-flex items-center justify-center sm:gap-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 flex-shrink-0"
               >
-                <PlusCircle className="w-4 h-4 flex-shrink-0" />
+                <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">Pasang Barang</span>
-                <span className="sm:hidden text-xs">Pasang</span>
               </Link>
 
               {/* User Account Menu */}
@@ -80,17 +80,17 @@ export const Navbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="h-10 px-2.5 sm:px-3 inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm text-zinc-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+                  className="h-10 px-2 sm:px-3 inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm text-zinc-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
                   aria-expanded={dropdownOpen}
                   aria-label="Menu akun pengguna"
                 >
                   <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center justify-center flex-shrink-0">
                     {user?.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-medium max-w-[70px] sm:max-w-[120px] truncate text-xs sm:text-sm">
+                  <span className="hidden min-[400px]:inline font-medium max-w-[70px] sm:max-w-[120px] truncate text-xs sm:text-sm">
                     {user?.name}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                  <ChevronDown className="hidden min-[400px]:block w-4 h-4 text-zinc-400 flex-shrink-0" />
                 </button>
 
                 {dropdownOpen && (

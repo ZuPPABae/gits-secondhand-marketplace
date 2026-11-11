@@ -25,11 +25,13 @@ Dokumen ini mencatat status pengerjaan, ringkasan keputusan, akun demo, instruks
 
 Semua akun demo dibuat secara otomatis oleh `Database\Seeders\UserSeeder`:
 
-| Nama | Email | Password | No. HP (WhatsApp) | Lokasi |
+| Nama | Email | Password | No. HP (WhatsApp Placeholder) | Lokasi |
 |---|---|---|---|---|
-| **Budi Santoso** | `budi@example.com` | `password123` | `6281234567890` | Tebet, Jakarta Selatan |
-| **Siti Rahma** | `siti@example.com` | `password123` | `6281298765432` | Serpong, Tangerang Selatan |
-| **Ahmad Hidayat** | `ahmad@example.com` | `password123` | `6281311223344` | Sukajadi, Bandung |
+| **Budi Santoso** | `budi@example.com` | `password123` | `628000000000` | Jakarta Selatan |
+| **Siti Rahayu** | `siti@example.com` | `password123` | `628000000000` | Bandung |
+| **Ahmad Fauzi** | `ahmad@example.com` | `password123` | `628000000000` | Surabaya |
+
+*Catatan: Nomor WhatsApp demo menggunakan placeholder `628000000000` via `config/demo.php`. Dapat ditimpa dengan nomor sendiri via environment variable `DEMO_WHATSAPP_NUMBER` lalu jalankan seeder ulang.*
 
 ---
 
@@ -77,4 +79,11 @@ docker exec -i marketplace_frontend npm run build
 
 4. **Validasi Kepemilikan Relasi Foto (`delete_image_ids`)**:
    - Menghindari kerentanan IDOR (Insecure Direct Object Reference) di mana user dapat mengirim ID foto barang milik pengguna lain saat mengedit barang miliknya sendiri. Form request `UpdateListingRequest` memvalidasi ID foto dengan rule scoped ke ID listing aktif.
+
+5. **Polish UI Responsif & Konfigurasi WhatsApp Demo**:
+   - Navbar di layar sempit (<400px hingga 320px): logo disederhanakan menjadi ikon saja, tombol "Pasang Barang" menjadi tombol ikon `+` ber-aria-label, dan dropdown akun menjadi avatar tanpa teks agar tidak ada horizontal overflow.
+   - Halaman edit listing (`/listings/:id/edit`): tombol/tautan Kembali dan Batal diarahkan ke `/me/listings`. Setelah berhasil update, redirect ke `/me/listings` dengan toast sukses.
+   - Halaman Listing Saya (`/me/listings`): tombol aksi tiap item dirapikan menjadi satu baris sejajar rata kanan di desktop (Edit, Tandai Status, Hapus ikon) dan tersusun rapi dengan lebar sama di mobile.
+   - Konfigurasi Demo WhatsApp: seluruh user demo menggunakan nomor placeholder `628000000000` via `config/demo.php` (`whatsapp_number`), dapat ditimpa via `DEMO_WHATSAPP_NUMBER`. Dokumentasi di `.agent/rules/backend-laravel.md`, `README.md`, dan `docs/operations.md` telah diperbarui.
+
 

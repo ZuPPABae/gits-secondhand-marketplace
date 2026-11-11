@@ -50,25 +50,26 @@ class DatabaseAndSeederTest extends TestCase
     public function test_demo_users_seeded_correctly(): void
     {
         $this->assertSame(3, User::count());
+        $expectedDemoPhone = (string) config('demo.whatsapp_number', '628000000000');
 
         $budi = User::where('email', 'budi@example.com')->first();
         $this->assertNotNull($budi);
         $this->assertSame('Budi Santoso', $budi->name);
-        $this->assertSame('6281234567801', $budi->phone);
+        $this->assertSame($expectedDemoPhone, $budi->phone);
         $this->assertSame('Jakarta Selatan', $budi->location);
         $this->assertTrue(Hash::check('password123', $budi->password));
 
         $siti = User::where('email', 'siti@example.com')->first();
         $this->assertNotNull($siti);
         $this->assertSame('Siti Rahayu', $siti->name);
-        $this->assertSame('6281234567802', $siti->phone);
+        $this->assertSame($expectedDemoPhone, $siti->phone);
         $this->assertSame('Bandung', $siti->location);
         $this->assertTrue(Hash::check('password123', $siti->password));
 
         $ahmad = User::where('email', 'ahmad@example.com')->first();
         $this->assertNotNull($ahmad);
         $this->assertSame('Ahmad Fauzi', $ahmad->name);
-        $this->assertSame('6281234567803', $ahmad->phone);
+        $this->assertSame($expectedDemoPhone, $ahmad->phone);
         $this->assertSame('Surabaya', $ahmad->location);
         $this->assertTrue(Hash::check('password123', $ahmad->password));
     }

@@ -13,7 +13,7 @@
 - `listing_images`: id, listing_id (FK, cascade delete), path, position
 - Index: composite `(status, category_id, created_at)`, index `user_id`, GIN trigram pada `title` (`CREATE EXTENSION IF NOT EXISTS pg_trgm`) untuk pencarian ILIKE cepat.
 - Gunakan PHP backed Enum untuk condition & status.
-- Seeder: 8 kategori (Sepeda, Perkakas, Hobi, Elektronik, Rumah Tangga, Otomotif, Olahraga, Lainnya), 3 user demo (password dummy, tulis di README), ±30 listing realistis berbahasa Indonesia dengan foto dummy (`https://picsum.photos/seed/<id>/800/600` boleh; resource harus menangani path lokal maupun URL penuh).
+- Seeder: 8 kategori (Sepeda, Perkakas, Hobi, Elektronik, Rumah Tangga, Otomotif, Olahraga, Lainnya), 3 user demo (password dummy, tulis di README), ±30 listing realistis berbahasa Indonesia dengan foto dummy (`https://picsum.photos/seed/<id>/800/600` boleh; resource harus menangani path lokal maupun URL penuh). Nomor WhatsApp user demo wajib menggunakan placeholder `628000000000` (bukan nomor orang sungguhan) yang dibaca dari config `config('demo.whatsapp_number')` (dengan fallback environment `DEMO_WHATSAPP_NUMBER`), format awalan 62 tanpa spasi atau tanda plus.
 
 ## Endpoint (semua di `/api/v1`)
 | Method | Path | Auth |

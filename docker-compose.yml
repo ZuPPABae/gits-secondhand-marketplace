@@ -26,6 +26,7 @@ services:
       - QUEUE_CONNECTION=sync
       - FILESYSTEM_DISK=public
       - APP_KEY=${APP_KEY:-}
+      - DEMO_WHATSAPP_NUMBER=${DEMO_WHATSAPP_NUMBER:-628000000000}
     ports:
       - "8000:8000"
     depends_on:

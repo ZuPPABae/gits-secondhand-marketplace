@@ -323,7 +323,13 @@ export const ListingForm: React.FC = () => {
       })
 
       setTimeout(() => {
-        navigate(`/listings/${result.id}`)
+        if (isEditMode) {
+          navigate('/me/listings', {
+            state: { message: 'Barang berhasil diperbarui!' },
+          })
+        } else {
+          navigate(`/listings/${result.id}`)
+        }
       }, 800)
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -446,7 +452,7 @@ export const ListingForm: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const pageTitle = isEditMode ? 'Edit Barang' : 'Pasang Barang'
-  const backHref = isEditMode ? `/listings/${id}` : '/'
+  const backHref = isEditMode ? '/me/listings' : '/'
 
   return (
     <>
@@ -461,7 +467,7 @@ export const ListingForm: React.FC = () => {
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             <span>
-              {isEditMode ? 'Kembali ke Detail Barang' : 'Kembali ke Beranda'}
+              {isEditMode ? 'Kembali ke Listing Saya' : 'Kembali ke Beranda'}
             </span>
           </Link>
         </div>

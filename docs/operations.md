@@ -60,6 +60,7 @@ Berikut adalah daftar variabel lingkungan utama yang dikonfigurasi pada sistem:
 | `REDIS_HOST` | `redis` (docker) / `localhost` | Host cache Redis. |
 | `REDIS_PORT` | `6379` | Port cache Redis. |
 | `FILESYSTEM_DISK` | `public` (dev) / `s3` (prod) | Disk penyimpanan berkas media foto. |
+| `DEMO_WHATSAPP_NUMBER` | `628000000000` | Nomor WhatsApp placeholder demo untuk seeder (`config/demo.php`). Format awalan 62 tanpa spasi atau tanda plus. Dapat diganti dengan nomor sendiri untuk pengujian kontak. |
 
 ### Frontend `.env`
 | Variabel | Nilai Default Dev | Keterangan & Penggunaan |

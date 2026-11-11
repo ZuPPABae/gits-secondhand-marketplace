@@ -13,26 +13,28 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        $demoPhone = (string) config('demo.whatsapp_number', '628000000000');
+
         $users = [
             [
                 'name' => 'Budi Santoso',
                 'email' => 'budi@example.com',
                 'password' => Hash::make('password123'),
-                'phone' => '6281234567801',
+                'phone' => $demoPhone,
                 'location' => 'Jakarta Selatan',
             ],
             [
                 'name' => 'Siti Rahayu',
                 'email' => 'siti@example.com',
                 'password' => Hash::make('password123'),
-                'phone' => '6281234567802',
+                'phone' => $demoPhone,
                 'location' => 'Bandung',
             ],
             [
                 'name' => 'Ahmad Fauzi',
                 'email' => 'ahmad@example.com',
                 'password' => Hash::make('password123'),
-                'phone' => '6281234567803',
+                'phone' => $demoPhone,
                 'location' => 'Surabaya',
             ],
         ];

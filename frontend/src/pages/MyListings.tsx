@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
@@ -73,21 +73,30 @@ const Toast: React.FC<{ toast: ToastState; onDismiss: () => void }> = ({
 
 export const MyListings: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const currentPage = Math.max(1, Number(searchParams.get('page')) || 1)
-
-  // Set document title
-  React.useEffect(() => {
-    document.title = 'Listing Saya — PasarWarga'
-  }, [])
 
   // State
   const [toast, setToast] = useState<ToastState | null>(null)
   const [itemToDelete, setItemToDelete] = useState<Listing | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null)
+
+  // Set document title & capture navigation toast state
+  React.useEffect(() => {
+    document.title = 'Listing Saya — PasarWarga'
+    if (location.state && typeof location.state === 'object' && 'message' in location.state) {
+      setToast({
+        type: 'success',
+        message: String((location.state as { message: string }).message),
+      })
+      // Clear location state after reading
+      navigate(location.pathname + location.search, { replace: true, state: {} })
+    }
+  }, [location, navigate])
 
   // Fetch data
   const { data, isLoading, isError, error, refetch } = useQuery({
@@ -373,7 +382,23 @@ export const MyListings: React.FC = () => {
                   </div>
 
                   {/* Tombol Aksi */}
-                  <div className="pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-100 flex flex-col items-stretch justify-end gap-2 w-full sm:w-36 flex-shrink-0">
+                  <div className="pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 w-full sm:w-auto flex-shrink-0">
+                    {/* Edit */}
+                    <Link
+                      to={`/listings/${item.id}/edit`}
+                      className="w-full sm:w-auto"
+                    >
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="w-full sm:w-auto justify-center"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 mr-1" />
+                        <span>Edit</span>
+                      </Button>
+                    </Link>
+
                     {/* Ubah Status */}
                     <Button
                       type="button"
@@ -386,41 +411,25 @@ export const MyListings: React.FC = () => {
                           ? 'Tandai barang kembali tersedia'
                           : 'Tandai barang sudah laku terjual'
                       }
-                      className="w-full"
+                      className="w-full sm:w-auto justify-center"
                     >
                       <RefreshCw className="w-3.5 h-3.5 mr-1" />
                       <span>{isSold ? 'Tandai Tersedia' : 'Tandai Terjual'}</span>
                     </Button>
 
-                    <div className="flex items-center gap-2 w-full">
-                      {/* Edit */}
-                      <Link
-                        to={`/listings/${item.id}/edit`}
-                        className="flex-1"
-                      >
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Edit2 className="w-3.5 h-3.5 mr-1" />
-                          <span>Edit</span>
-                        </Button>
-                      </Link>
-
-                      {/* Hapus */}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setItemToDelete(item)}
-                        title="Hapus listing barang"
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2.5"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {/* Hapus */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setItemToDelete(item)}
+                      title="Hapus listing barang"
+                      aria-label="Hapus listing barang"
+                      className="w-full sm:w-auto justify-center text-red-600 hover:bg-red-50 hover:text-red-700 px-2.5"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="sm:hidden ml-1.5">Hapus</span>
+                    </Button>
                   </div>
                 </div>
               )

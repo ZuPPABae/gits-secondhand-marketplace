@@ -104,11 +104,24 @@ Aplikasi siap digunakan di:
 
 Database telah dilengkapi 3 akun demo dengan data profil dan barang riil:
 
-| Nama Pengguna | Alamat Email | Kata Sandi | Nomor WhatsApp | Wilayah Domisili |
+| Nama Pengguna | Alamat Email | Kata Sandi | Nomor WhatsApp (Demo Placeholder) | Wilayah Domisili |
 |---|---|---|---|---|
-| **Budi Santoso** | `budi@example.com` | `password123` | `6281234567890` | Tebet, Jakarta Selatan |
-| **Siti Rahma** | `siti@example.com` | `password123` | `6281298765432` | Serpong, Tangerang Selatan |
-| **Ahmad Hidayat** | `ahmad@example.com` | `password123` | `6281311223344` | Sukajadi, Bandung |
+| **Budi Santoso** | `budi@example.com` | `password123` | `628000000000` | Jakarta Selatan |
+| **Siti Rahayu** | `siti@example.com` | `password123` | `628000000000` | Bandung |
+| **Ahmad Fauzi** | `ahmad@example.com` | `password123` | `628000000000` | Surabaya |
+
+> ℹ️ **Catatan Nomor WhatsApp Demo**:  
+> Semua akun demo secara bawaan menggunakan nomor dummy/placeholder `628000000000` (bukan nomor orang sungguhan). Jika kamu ingin mencoba tombol **Hubungi Penjual via WhatsApp** secara langsung dengan nomor WhatsApp aktif milikmu:
+> 1. Buka berkas `.env` (atau `backend/.env`) dan set variabel:
+>    ```env
+>    DEMO_WHATSAPP_NUMBER=628xxxxxxxxxx
+>    ```
+>    *(Format: diawali angka 62, tanpa tanda plus atau spasi).*
+> 2. Jalankan ulang seeder database:
+>    ```powershell
+>    docker exec -i marketplace_backend php artisan migrate:fresh --seed
+>    ```
+
 
 ---
 
