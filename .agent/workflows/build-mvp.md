@@ -29,4 +29,3 @@ Baca `AGENTS.md` dan semua file di `.agent/rules/` terlebih dahulu. Kerjakan fas
 1. Rapikan UI sesuai `design-system.md`, cek responsif mobile, cek semua state.
 2. Ambil screenshot ke `/screenshots` (halaman Home, Detail, Form, Listing Saya, Profil).
 
-Setelah selesai, jalankan `/write-docs` lalu `/final-check`.
