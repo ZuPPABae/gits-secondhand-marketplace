@@ -1,133 +1,157 @@
-# Marketplace Barang Bekas Komunitas
+# PasarWarga — Marketplace Barang Bekas Komunitas
 
-MVP platform jual-beli barang bekas untuk komunitas, dibangun sebagai fullstack assignment dengan arsitektur yang siap di-scale hingga ±100.000 DAU.
+**PasarWarga** adalah Minimum Viable Product (MVP) platform jual-beli barang bekas untuk komunitas warga/bapak-bapak, dibangun sebagai Fullstack Assignment dengan rancangan arsitektur terukur untuk mendukung skala **±100.000 Daily Active Users (DAU)**.
 
-## Fitur
+> 📢 **Pernyataan Batasan MVP (Transparansi Teknis)**:  
+> Komponen cloud berbayar seperti **Cloudflare CDN/WAF**, **Database Read Replica**, **PgBouncer**, dan **Object Storage S3/R2** dirancang secara komprehensif pada dokumen arsitektur dan dapat diaktifkan melalui *environment variable*, namun **tidak di-deploy pada pengujian lokal MVP**. Lingkungan MVP berjalan secara utuh dan mandiri di dalam **Docker Compose**.
 
-| # | Fitur | Status |
-|---|-------|--------|
-| 1 | Auth: register, login, logout | ✅ |
-| 2 | Daftar barang (grid) + pagination + search + filter kategori & kondisi | ✅ |
-| 3 | Detail barang + info penjual + tombol WhatsApp | ✅ |
-| 4 | Pasang barang (nama, kategori, harga, kondisi, deskripsi, lokasi, foto) | ✅ |
-| 5 | Kelola listing milik sendiri: lihat, edit, hapus | ✅ |
-| 6 | Ubah status: tersedia / terjual | ✅ |
-| 7 | Profil user: info dasar + daftar listing | ✅ |
+---
 
-> Fitur di luar scope (future work): chat in-app, pembayaran, admin panel, favorit/wishlist, review/rating, notifikasi, social login.
+## 1. Fitur Utama
 
-## Tech Stack
+| No | Fitur Utama | Status | Deskripsi |
+|---|---|---|---|
+| 1 | **Autentikasi Pengguna** | ✅ Selesai | Registrasi akun baru, login, dan logout via Laravel Sanctum SPA Cookie Auth (`httpOnly`). |
+| 2 | **Katalog & Pencarian** | ✅ Selesai | Grid responsif (1 kolom di HP, 2–4 di desktop), pencarian trigram cepat, filter kategori & kondisi, pengurutan harga, serta paginasi URL stateful. |
+| 3 | **Detail Barang & WhatsApp** | ✅ Selesai | Galeri multi-foto, rincian harga, info penjual, dan tombol langsung ke WhatsApp (`wa.me`) dengan template pesan otomatis. |
+| 4 | **Pasang Barang Baru** | ✅ Selesai | Form terproteksi validasi Zod + Laravel Form Request, preview multi-foto (maks 5 foto), dan upload biner multipart. |
+| 5 | **Kelola Listing Saya** | ✅ Selesai | Daftar inventaris pribadi pemilik: navigasi edit, ubah status, dan hapus barang dengan dialog konfirmasi aman. |
+| 6 | **Manajemen Status Barang** | ✅ Selesai | Beralih antara status **Tersedia** dan **Terjual** secara instan; kontak WhatsApp otomatis dinonaktifkan saat barang terjual. |
+| 7 | **Profil Pengguna** | ✅ Selesai | Halaman profil publik penjual beserta daftar barang yang dijual, dengan perlindungan privasi ketat (tanpa membocorkan nomor telepon atau email). |
 
-| Layer | Teknologi |
-|-------|-----------|
-| Backend | Laravel 12 (PHP 8.3), REST API `/api/v1`, Laravel Sanctum |
-| Frontend | React 18 + Vite + TypeScript, Tailwind CSS v4, React Router, TanStack Query |
-| Database | PostgreSQL 16 |
-| Cache / Rate Limit | Redis 7 |
-| Dev Environment | Docker Compose |
-| Production (rancangan) | Cloudflare CDN/WAF, container + load balancer, managed PostgreSQL + read replica, Redis managed, object storage S3/R2 |
+*Fitur di luar cakupan (Out of Scope / Future Work)*: Chat in-app, payment gateway/rekening bersama, panel admin, favorit/wishlist, ulasan/rating bintang, push notification, dan social login.
 
-## Struktur Proyek
+---
+
+## 2. Tech Stack
+
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS v4, React Router, TanStack Query (React Query), Lucide React.
+- **Backend**: Laravel 12 (PHP 8.3), REST API versi `/api/v1`, Laravel Sanctum SPA Cookie Auth.
+- **Basis Data**: PostgreSQL 16 (dengan ekstensi `pg_trgm` dan GIN index untuk pencarian teks).
+- **Cache & Rate Limit**: Redis 7 (In-memory cache detail listing TTL 5m, shared session, IP rate limiter).
+- **Dev Environment**: Docker Compose (multi-container: `frontend`, `backend`, `postgres`, `redis`).
+- **Production Architecture (Rancangan)**: Cloudflare Anycast DNS, CDN & WAF, Container Autoscaling (Kubernetes/Cloud Run), PgBouncer connection pooler, Managed PostgreSQL Primary + Read Replica, Cloudflare R2 / AWS S3 Object Storage.
+
+---
+
+## 3. Struktur Direktori Proyek
 
 ```
 gits-secondhand-marketplace/
-├── backend/            # Laravel 12 API
-├── frontend/           # React + Vite SPA
-├── docs/               # Dokumentasi & diagram Mermaid
+├── backend/                # Laravel 12 REST API
+│   ├── app/                # Controllers, Models, Requests, Resources, Policies
+│   ├── database/           # Migrations & Seeders
+│   └── routes/api.php      # Definisi rute RESTful /api/v1
+├── frontend/               # React 18 + Vite SPA
+│   ├── src/                # Components, Pages, Features, API client, Lib
+│   └── public/             # Favicon SVG & aset publik
+├── docs/                   # Dokumentasi Teknis & Arsitektur
 │   ├── decisions.md        # Architecture Decision Records (ADR)
-│   ├── architecture-app.md # Diagram arsitektur aplikasi (dev)
-│   ├── architecture-infra.md # Diagram arsitektur infrastruktur (prod)
-│   ├── api.md              # Dokumentasi endpoint API
-│   ├── database.md         # Skema database
-│   ├── scaling-reliability.md
-│   ├── security.md
-│   └── operations.md
-├── screenshots/        # Screenshot aplikasi
-├── docker-compose.yml
-├── .env.example        # Konfigurasi env untuk Docker Compose
+│   ├── architecture-app.md # Arsitektur aplikasi & alur komponen
+│   ├── architecture-infra.md # Arsitektur infrastruktur 100k DAU (VPC, Replica, CDN)
+│   ├── scaling-reliability.md # Asumsi beban, perhitungan matematika, & mitigasi
+│   ├── security.md         # Kebijakan auth, otorisasi IDOR, CSRF, & data privacy
+│   ├── database.md         # Skema relasional, ERD Mermaid, & strategi indexing
+│   ├── api.md              # Spesifikasi lengkap seluruh endpoint REST API
+│   ├── operations.md       # Panduan deployment, backup, & troubleshooting
+│   └── PROGRESS.md         # Catatan milestone pengerjaan proyek
+├── screenshots/            # Tangkapan layar antarmuka aplikasi
+├── docker-compose.yml      # Orkestrasi multi-container Docker
+├── .env.example            # Konfigurasi environment template
 └── README.md
 ```
 
-## Prasyarat
+---
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (sudah include Docker Compose)
-- Port `5173`, `8000`, `5432`, `6379` tidak dipakai proses lain
+## 4. Prasyarat Sistem
 
-## Cara Menjalankan
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (versi 24+) yang sudah menyertakan Docker Compose v2.
+- Git.
+- Port lokal yang tidak sedang terpakai: `5173` (Frontend), `8000` (Backend), `5432` (PostgreSQL), dan `6379` (Redis).
 
-### 1. Persiapan Environment (.env)
-Salin berkas konfigurasi environment dari `.env.example`:
-```bash
-# Salin root env untuk docker-compose
-cp .env.example .env
+---
 
-# Salin backend env jika diperlukan untuk lokal
-cp backend/.env.example backend/.env
+## 5. Cara Menjalankan Aplikasi
+
+Jalankan perintah berikut di terminal (PowerShell di Windows, baris per baris):
+
+### 1. Salin Berkas Environment
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
 ```
-
-Jika `APP_KEY` belum terisi pada `.env`, Anda dapat menghasilkannya menggunakan perintah artisan setelah container berjalan:
-```bash
-docker compose run --rm backend php artisan key:generate
-```
-Lalu tempelkan nilai `APP_KEY=base64:...` yang dihasilkan ke berkas `.env` di root.
 
 ### 2. Build dan Jalankan Container
-```bash
-docker compose up --build
+```powershell
+docker compose up --build -d
 ```
-> **Catatan**: Entrypoint backend akan secara otomatis menjalankan migrasi database, membuat symlink storage (`php artisan storage:link`), dan database dev sudah siap digunakan.
 
-Aplikasi web dapat dibuka di **http://localhost:5173**  
-Backend REST API tersedia di **http://localhost:8000/api/v1**  
-Health check endpoint: **http://localhost:8000/up**
+### 3. Jalankan Database Seeder
+Container backend akan secara otomatis menjalankan migrasi dan symlink storage (`php artisan storage:link`). Untuk memastikan database terisi dengan data demo awal:
+```powershell
+docker exec -i marketplace_backend php artisan migrate:fresh --seed
+```
 
-## Akun Demo
+Aplikasi siap digunakan di:
+- **Aplikasi Web**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
+- **Liveness Probe**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
-Data demo diinisialisasi otomatis saat pertama kali migrasi dijalankan (`UserSeeder` & `ListingSeeder`):
+---
 
-| Nama | Email | Password | No. HP (WhatsApp) | Lokasi |
-|------|-------|----------|-------------------|--------|
+## 6. Kredensial Akun Demo (Seeder)
+
+Database telah dilengkapi 3 akun demo dengan data profil dan barang riil:
+
+| Nama Pengguna | Alamat Email | Kata Sandi | Nomor WhatsApp | Wilayah Domisili |
+|---|---|---|---|---|
 | **Budi Santoso** | `budi@example.com` | `password123` | `6281234567890` | Tebet, Jakarta Selatan |
 | **Siti Rahma** | `siti@example.com` | `password123` | `6281298765432` | Serpong, Tangerang Selatan |
 | **Ahmad Hidayat** | `ahmad@example.com` | `password123` | `6281311223344` | Sukajadi, Bandung |
 
-## Menjalankan Pengujian (Testing)
+---
 
-Pengujian backend berjalan di database terisolasi (`marketplace_test`) sehingga **tidak akan menghapus** data development (`marketplace_db`).
+## 7. Pengujian & Audit Kualitas Kode
 
-Jalankan perintah pengujian berikut di terminal (jalankan satu per satu jika menggunakan PowerShell):
+Pengujian unit dan integrasi otomatis berjalan pada basis data terisolasi (`marketplace_test`), sehingga **tidak akan menghapus atau mencemari** data pengujian pada `marketplace_db`.
 
-```bash
-# 1. Feature & Unit Tests Backend (PHPUnit)
+```powershell
+# 1. Jalankan PHPUnit Test Suite (51 tests)
 docker exec -i marketplace_backend php artisan test
 
-# 2. Code Style Audit Backend (Laravel Pint)
+# 2. Audit Format Kode Standar PSR-12 (Laravel Pint)
 docker exec -i marketplace_backend ./vendor/bin/pint --test
 
-# 3. Linter Frontend (ESLint)
-docker exec -i marketplace_frontend npm run lint
+# 3. Linter Frontend TypeScript & React (ESLint)
+npm --prefix frontend run lint
 
-# 4. Typecheck & Production Build Frontend (Vite)
-docker exec -i marketplace_frontend npm run build
+# 4. Typecheck & Kompilasi Build Frontend (Vite)
+npm --prefix frontend run build
 ```
 
-## Dokumentasi
+---
 
-Semua dokumentasi teknis ada di folder [`/docs`](./docs/):
+## 8. Indeks Dokumentasi Teknis
 
-- [`decisions.md`](./docs/decisions.md) — Architecture Decision Records
-- [`architecture-app.md`](./docs/architecture-app.md) — Diagram arsitektur aplikasi
-- [`architecture-infra.md`](./docs/architecture-infra.md) — Diagram infrastruktur produksi
-- [`api.md`](./docs/api.md) — Referensi endpoint API
-- [`database.md`](./docs/database.md) — Skema database & ERD
-- [`scaling-reliability.md`](./docs/scaling-reliability.md) — Strategi scaling & reliability
-- [`security.md`](./docs/security.md) — Implementasi keamanan
-- [`operations.md`](./docs/operations.md) — Panduan operasional
+Dokumentasi arsitektur dan teknis mendalam tersedia lengkap di folder [`/docs`](./docs/):
 
-## Screenshots
+1. [docs/architecture-app.md](./docs/architecture-app.md) — Diagram alur komponen aplikasi, REST API, Sanctum, dan integrasi WhatsApp.
+2. [docs/architecture-infra.md](./docs/architecture-infra.md) — Desain infrastruktur 100k DAU, VPC subnet, Cloudflare CDN/WAF, autoscaling, dan database replica.
+3. [docs/scaling-reliability.md](./docs/scaling-reliability.md) — Analisis matematis beban 100k DAU, multi-tier caching, indexing, dan estimasi bandwidth.
+4. [docs/security.md](./docs/security.md) — Kontrol keamanan autentikasi cookie, pencegahan IDOR, proteksi CSRF, dan data privacy.
+5. [docs/database.md](./docs/database.md) — Skema database, Entity Relationship Diagram (ERD), dan optimasi PostgreSQL GIN trigram.
+6. [docs/api.md](./docs/api.md) — Spesifikasi lengkap seluruh endpoint REST API, parameter, response, dan kode error.
+7. [docs/decisions.md](./docs/decisions.md) — Architecture Decision Records (ADR 001 - 011) serta rencana Future Work.
+8. [docs/operations.md](./docs/operations.md) — Panduan operasional deployment, logging, backup, dan solusi troubleshooting.
 
-Screenshot tersedia di folder [`/screenshots`](./screenshots/) setelah aplikasi dijalankan.
+---
 
-## Lisensi
+## 9. Tangkapan Layar (Screenshots)
 
-Proyek ini dibuat untuk keperluan assignment. Tidak untuk penggunaan komersial.
+Tangkapan layar tampilan antarmuka aplikasi disimpan pada direktori [`/screenshots`](./screenshots/) mencakup:
+- Beranda Katalog Barang & Filter Pencarian
+- Detail Barang & Tautan WhatsApp
+- Formulir Pasang & Edit Barang
+- Manajemen Listing Saya & Ubah Status
+- Tampilan Responsif Mobile

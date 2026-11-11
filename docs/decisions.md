@@ -191,3 +191,26 @@ Dokumen ini mencatat keputusan teknis non-trivial beserta konteks, alasan, dan t
 - Invalidasi instan pada mutasi menjamin penjual dan pembeli langsung melihat status barang terkini (misal: saat ditandai "Terjual").
 
 **Trade-off**: Pengembang harus memastikan setiap rute mutasi yang memengaruhi data listing memanggil invalidasi cache yang sesuai.
+
+---
+
+## 4. Pengembangan di Masa Depan (Future Work)
+
+Fitur-fitur berikut secara sadar berada di luar cakupan (*out of scope*) MVP 1-hari dan dicatat sebagai rencana pengembangan tahap berikutnya:
+
+1. **Chat In-App Realtime**:
+   - Integrasi WebSockets (Laravel Reverb / Pusher) untuk perpesanan instan langsung di dalam aplikasi tanpa mengekspos nomor WhatsApp penjual.
+2. **Sistem Pembayaran Rekening Bersama (Escrow / Payment Gateway)**:
+   - Integrasi payment gateway (Midtrans, Xendit, atau Doku) untuk mengamankan transaksi pengiriman jarak jauh di luar model COD.
+3. **Panel Admin & Moderasi Konten**:
+   - Dashboard pengelolaan barang, verifikasi identitas warga, penanganan laporan penipuan (*fraud report*), dan audit log aktivitas.
+4. **Sistem Reputasi, Ulasan & Rating**:
+   - Ulasan timbal balik antara penjual dan pembeli setelah transaksi selesai ditandai "Terjual".
+5. **Fitur Favorit & Wishlist**:
+   - Kemampuan pembeli menyimpan barang incaran dan mendapatkan notifikasi saat harga turun.
+6. **Notifikasi Transaksi Multisaluran**:
+   - Push notifications browser/mobile dan email transactional (via AWS SES / Mailgun).
+7. **Direct Upload via S3 Presigned URL**:
+   - Mengalihkan transfer biner berkas foto langsung dari browser pengguna ke bucket S3/R2 untuk memangkas konsumsi bandwidth origin server.
+8. **Dedicated Search Engine (Meilisearch / Typesense)**:
+   - Pencarian instan as-you-type, typo tolerance dinamis, dan pencarian radius geografis koordinat GPS jika volume listing melampaui 1 juta baris.
