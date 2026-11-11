@@ -91,14 +91,17 @@ Container aplikasi backend dirancang **100% stateless**:
 
 ## 5. Strategi Rate Limiting Bertingkat
 
-Untuk melindungi API dari serangan bot scraping dan brute-force yang dapat menghabiskan kuota koneksi:
+**Sudah diterapkan di MVP (Laravel + Redis):**
+- Autentikasi (`/api/v1/auth/register`, `/api/v1/auth/login`): 5 percobaan per menit 
+  per kombinasi IP dan email, mencegah brute-force.
+- Upload foto (`POST /api/v1/listings`): 20 permintaan per jam per pengguna 
+  terautentikasi (cadangan: per IP), mencegah *storage flooding*.
 
-1. **Edge Rate Limiting (Cloudflare WAF)**:
-   - Memblokir IP yang mengirimkan > 100 request/menit ke origin API.
-2. **Application Rate Limiting (Laravel via Redis)**:
-   - **Autentikasi (`/api/v1/auth/login`, `/register`)**: Dibatasi maksimal 5 request per menit per IP untuk mencegah brute-force password.
-   - **Upload & Pasang Listing (`POST /api/v1/listings`)**: Dibatasi maksimal 10 request per menit per pengguna terautentikasi untuk mencegah *storage flooding*.
-   - **Global Fallback**: 60 request per menit per IP untuk endpoint publik.
+**Rancangan produksi (belum diterapkan):**
+- Edge (Cloudflare WAF): blokir IP yang mengirim >100 request/menit ke origin dan 
+  batasi `/api/v1/auth/*` hingga 10 request/menit per IP sebelum menyentuh load balancer.
+- Throttle global API per IP (mis. 120/menit) di Laravel, dan limiter khusus untuk 
+  endpoint tulis lain.
 
 ---
 

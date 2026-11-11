@@ -47,7 +47,7 @@ Dokumen ini mencatat keputusan teknis non-trivial beserta konteks, alasan, dan t
 **Keputusan**: Gunakan PostgreSQL 16 sebagai primary database.
 
 **Alasan**:
-- Ekstensi `pg_trgm` memungkinkan full-text search dengan trigram tanpa Elasticsearch (lihat ADR-005).
+- Ekstensi `pg_trgm` memungkinkan pencarian parsial berbasis trigram tanpa Elasticsearch (ADR-005).
 - PostgreSQL lebih unggul dalam query kompleks, indeks parsial, dan JSON operations.
 - JSONB cocok untuk menyimpan metadata fleksibel (atribut barang yang bervariasi per kategori).
 - Dukungan `LISTEN/NOTIFY` untuk fitur real-time di masa depan.
@@ -135,12 +135,12 @@ Dokumen ini mencatat keputusan teknis non-trivial beserta konteks, alasan, dan t
 
 **Konteks**: Tim pengembang membutuhkan environment development yang konsisten dan mudah di-setup.
 
-**Keputusan**: Gunakan Docker Compose untuk menjalankan semua service (backend, frontend, postgres, redis) dalam satu perintah `docker-compose up --build`.
+**Keputusan**: Gunakan Docker Compose untuk menjalankan semua service (backend, frontend, postgres, redis) dalam satu perintah `docker compose up --build`.
 
 **Alasan**:
 - Satu perintah setup untuk semua developer, tidak ada "works on my machine" syndrome.
 - Isolasi service: versi PHP, Node, PostgreSQL, Redis terjamin konsisten.
-- Mudah di-reset: `docker-compose down -v` menghapus semua data, `up --build` mulai dari awal.
+- Mudah di-reset: `docker compose down -v` menghapus semua data, `up --build` mulai dari awal.
 - Mendekati kondisi production (containerized), memudahkan transisi ke Kubernetes/cloud.
 
 **Alternatif**: Laravel Sail (wrapper Docker Compose), Valet/Herd (macOS only), Vagrant, bare metal install.
@@ -194,7 +194,7 @@ Dokumen ini mencatat keputusan teknis non-trivial beserta konteks, alasan, dan t
 
 ---
 
-## 4. Pengembangan di Masa Depan (Future Work)
+## Future Work
 
 Fitur-fitur berikut secara sadar berada di luar cakupan (*out of scope*) MVP 1-hari dan dicatat sebagai rencana pengembangan tahap berikutnya:
 

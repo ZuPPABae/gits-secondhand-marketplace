@@ -104,7 +104,7 @@ Implementasi rate limiting ditenagai oleh store in-memory **Redis** (`RateLimite
 2. **Perlindungan Data Pribadi (PII) di Endpoint Publik**:
    - **Profil Pengguna Publik (`GET /api/v1/users/{id}`)**:
      - Hanya menampilkan data publik: nama, lokasi umum (kota/kecamatan), tanggal bergabung, dan daftar barang yang dijual.
-     - **Email dan Nomor WhatsApp TIDAK PERNAH diekspos** di endpoint profil untuk melindungi pengguna dari profiling data pribadi dan pesan spam.
+     - **Email dan Nomor WhatsApp tidak pernah diekspos** di endpoint profil untuk melindungi pengguna dari profiling data pribadi dan pesan spam.
    - **Kontak Penjual di Detail Barang (`GET /api/v1/listings/{id}`)**:
      - Nomor HP asli tidak dikembalikan sebagai string mentah.
      - Backend hanya menyertakan URL tautan deep link WhatsApp yang terformat (`https://wa.me/{phone}?text=...`).

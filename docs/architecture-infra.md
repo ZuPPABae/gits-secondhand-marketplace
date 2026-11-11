@@ -1,6 +1,6 @@
 # Arsitektur Infrastruktur (Skala ±100.000 DAU)
 
-Dokumen ini menguraikan rancangan arsitektur infrastruktur untuk mendukung target **±100.000 Daily Active Users (DAU)**.
+Dokumen ini menguraikan asumsi rancangan arsitektur infrastruktur untuk mendukung target **±100.000 Daily Active Users (DAU)**.
 
 > ⚠️ **Pernyataan Batasan MVP**:
 > Seluruh infrastruktur produksi berbayar/cloud (Cloudflare CDN/WAF, Managed Database dengan Read Replica, Object Storage S3/R2, PgBouncer, dan Kubernetes Autoscaler) adalah **rancangan teknis** dan **tidak dibangun** pada lingkungan lokal MVP. Lingkungan MVP berjalan secara mandiri dan utuh di **Docker Compose**.

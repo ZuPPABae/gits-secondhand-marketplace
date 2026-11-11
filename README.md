@@ -1,6 +1,6 @@
 # PasarWarga — Marketplace Barang Bekas Komunitas
 
-**PasarWarga** adalah Minimum Viable Product (MVP) platform jual-beli barang bekas untuk komunitas warga/bapak-bapak, dibangun sebagai Fullstack Assignment dengan rancangan arsitektur terukur untuk mendukung skala **±100.000 Daily Active Users (DAU)**.
+**PasarWarga** adalah platform jual-beli barang bekas untuk komunitas warga/bapak-bapak, dibangun sebagai Fullstack Assignment dengan rancangan arsitektur terukur untuk mendukung skala **±100.000 Daily Active Users (DAU)**.
 
 > 📢 **Pernyataan Batasan MVP (Transparansi Teknis)**:  
 > Komponen cloud berbayar seperti **Cloudflare CDN/WAF**, **Database Read Replica**, **PgBouncer**, dan **Object Storage S3/R2** dirancang secara komprehensif pada dokumen arsitektur dan dapat diaktifkan melalui *environment variable*, namun **tidak di-deploy pada pengujian lokal MVP**. Lingkungan MVP berjalan secara utuh dan mandiri di dalam **Docker Compose**.
@@ -11,13 +11,13 @@
 
 | No | Fitur Utama | Status | Deskripsi |
 |---|---|---|---|
-| 1 | **Autentikasi Pengguna** | ✅ Selesai | Registrasi akun baru, login, dan logout via Laravel Sanctum SPA Cookie Auth (`httpOnly`). |
-| 2 | **Katalog & Pencarian** | ✅ Selesai | Grid responsif (1 kolom di HP, 2–4 di desktop), pencarian trigram cepat, filter kategori & kondisi, pengurutan harga, serta paginasi URL stateful. |
-| 3 | **Detail Barang & WhatsApp** | ✅ Selesai | Galeri multi-foto, rincian harga, info penjual, dan tombol langsung ke WhatsApp (`wa.me`) dengan template pesan otomatis. |
-| 4 | **Pasang Barang Baru** | ✅ Selesai | Form terproteksi validasi Zod + Laravel Form Request, preview multi-foto (maks 5 foto), dan upload biner multipart. |
-| 5 | **Kelola Listing Saya** | ✅ Selesai | Daftar inventaris pribadi pemilik: navigasi edit, ubah status, dan hapus barang dengan dialog konfirmasi aman. |
-| 6 | **Manajemen Status Barang** | ✅ Selesai | Beralih antara status **Tersedia** dan **Terjual** secara instan; kontak WhatsApp otomatis dinonaktifkan saat barang terjual. |
-| 7 | **Profil Pengguna** | ✅ Selesai | Halaman profil publik penjual beserta daftar barang yang dijual, dengan perlindungan privasi ketat (tanpa membocorkan nomor telepon atau email). |
+| 1 | **Autentikasi Pengguna** | ✅ | Registrasi akun baru, login, dan logout via Laravel Sanctum SPA Cookie Auth (`httpOnly`). |
+| 2 | **Katalog & Pencarian** | ✅ | Grid responsif (1 kolom di HP, 2–4 di desktop), pencarian trigram cepat, filter kategori & kondisi, pengurutan harga, serta paginasi URL stateful. |
+| 3 | **Detail Barang & WhatsApp** | ✅ | Galeri multi-foto, rincian harga, info penjual, dan tombol langsung ke WhatsApp (`wa.me`) dengan template pesan otomatis. |
+| 4 | **Pasang Barang Baru** | ✅ | Form terproteksi validasi Zod + Laravel Form Request, preview multi-foto (maks 5 foto), dan upload biner multipart. |
+| 5 | **Kelola Listing Saya** | ✅ | Daftar inventaris pribadi pemilik: navigasi edit, ubah status, dan hapus barang dengan dialog konfirmasi aman. |
+| 6 | **Manajemen Status Barang** | ✅ | Beralih antara status **Tersedia** dan **Terjual** secara instan; kontak WhatsApp otomatis dinonaktifkan saat barang terjual. |
+| 7 | **Profil Pengguna** | ✅ | Halaman profil publik penjual beserta daftar barang yang dijual, dengan perlindungan privasi ketat (tanpa membocorkan nomor telepon atau email). |
 
 *Fitur di luar cakupan (Out of Scope / Future Work)*: Chat in-app, payment gateway/rekening bersama, panel admin, favorit/wishlist, ulasan/rating bintang, push notification, dan social login.
 
@@ -111,7 +111,7 @@ Database telah dilengkapi 3 akun demo dengan data profil dan barang riil:
 | **Ahmad Fauzi** | `ahmad@example.com` | `password123` | `628000000000` | Surabaya |
 
 > ℹ️ **Catatan Nomor WhatsApp Demo**:  
-> Semua akun demo secara bawaan menggunakan nomor dummy/placeholder `628000000000` (bukan nomor orang sungguhan). Jika kamu ingin mencoba tombol **Hubungi Penjual via WhatsApp** secara langsung dengan nomor WhatsApp aktif milikmu:
+> Semua akun demo secara bawaan menggunakan nomor dummy/placeholder `628000000000` (bukan nomor orang sungguhan). Jika ingin mencoba tombol **Hubungi Penjual via WhatsApp** secara langsung dengan nomor WhatsApp aktif:
 > 1. Buka berkas `.env` (atau `backend/.env`) dan set variabel:
 >    ```env
 >    DEMO_WHATSAPP_NUMBER=628xxxxxxxxxx

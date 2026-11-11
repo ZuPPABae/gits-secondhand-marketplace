@@ -119,10 +119,12 @@ Pada skala produksi target 100k DAU:
 ### A. Pencadangan Manual Database PostgreSQL (Dev / Staging)
 ```powershell
 # Backup database marketplace_db ke file SQL
-docker exec -i marketplace_postgres pg_dump -U marketplace_user -d marketplace_db > backup_marketplace.sql
+docker exec marketplace_postgres pg_dump -U marketplace_user -d marketplace_db -f /tmp/backup.sql
+docker cp marketplace_postgres:/tmp/backup.sql .\backup_marketplace.sql
 
 # Restore file backup ke database
-docker exec -i marketplace_postgres psql -U marketplace_user -d marketplace_db < backup_marketplace.sql
+docker cp .\backup_marketplace.sql marketplace_postgres:/tmp/backup.sql
+docker exec marketplace_postgres psql -U marketplace_user -d marketplace_db -f /tmp/backup.sql
 ```
 
 ### B. Pencadangan Produksi (Target RPO < 5 Menit, RTO < 30 Menit)

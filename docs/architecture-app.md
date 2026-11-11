@@ -43,7 +43,7 @@ flowchart TD
     Controllers -->|"Pengecekan Hak Akses"| Policies
 
     %% Interaksi Backend ke Datastore
-    Controllers -->|"Query CRUD & Full-Text Search"| DB
+    Controllers -->|"Query CRUD & pencarian trigram"| DB
     Controllers -->|"Cache Read/Write & Rate Limiting"| Redis
     Controllers -->|"Simpan / Hapus Foto Barang"| LocalStorage
 
@@ -66,14 +66,14 @@ flowchart TD
 - **Teknologi**: Laravel 12 (PHP 8.3) berjalan di server built-in / PHP-FPM port 8000.
 - **Routing API**: Seluruh endpoint RESTful dikelompokkan dalam prefiks versi `/api/v1`.
 - **Autentikasi (Sanctum SPA Cookie)**:
-  - Menggunakan sesi berbasis cookie HTTP-only (`marketplace_session`).
+  - Menggunakan sesi berbasis cookie HTTP-only (`marketplace_barang_bekas_session`), disimpan di Redis.
   - Mengamankan mutasi state (`POST`, `PUT`, `PATCH`, `DELETE`) dari serangan Cross-Site Request Forgery (CSRF) via endpoint `/sanctum/csrf-cookie`.
 - **Otorisasi & Keamanan**:
   - `ListingPolicy` menjamin kepemilikan data (mencegah IDOR saat pengguna mengedit, menghapus, atau menandai status barang).
   - Validasi form request yang ketat (`StoreListingRequest`, `UpdateListingRequest`) dengan validasi kepemilikan ID foto saat edit.
 - **Rate Limiting**:
-  - Endpoint autentikasi (`/api/v1/auth/register`, `/api/v1/auth/login`) dibatasi 5 request/menit untuk mencegah brute-force.
-  - Endpoint upload (`POST /api/v1/listings`) dibatasi 10 request/menit untuk mencegah flooding berkas.
+  - Endpoint autentikasi (`/api/v1/auth/register`, `/api/v1/auth/login`) dibatasi 5 percobaan per menit per kombinasi IP dan email untuk mencegah brute-force.
+  - Endpoint upload (`POST /api/v1/listings`) dibatasi 20 upload per jam per pengguna untuk mencegah flooding berkas.
 
 ### C. Database (PostgreSQL 16)
 - **Peran**: Penyimpanan relasional persisten data pengguna, kategori barang, katalog listing, dan relasi foto barang.
@@ -94,7 +94,7 @@ flowchart TD
 ### F. Integrasi Layanan Eksternal (WhatsApp)
 - **Mekanisme**: Direct deep link menggunakan protokol URL scheme standar `https://wa.me/{phone}?text={encoded_message}`.
 - **Keunggulan**:
-  - **Zero Server Overhead**: Tidak ada panggilan API sisi server, tidak memerlukan webhook, dan tidak ada biaya langganan gateway chat.
+  - **Zero Server Overhead**: Tidak ada panggilan ke API eksternal, tidak memerlukan webhook, dan tidak ada biaya langganan gateway chat.
   - **Pesan Otomatis**: Pesan awal langsung terisi judul barang dan harga Rupiah secara otomatis ketika aplikasi WhatsApp pembeli terbuka.
   - **Privasi & Keamanan**: Percakapan negosiasi dan transaksi COD berlangsung langsung secara end-to-end terenkripsi di WhatsApp pengguna.
 
@@ -104,7 +104,7 @@ flowchart TD
 
 1. **Inisialisasi Sesi Pengguna**:
    - Browser memanggil `GET /sanctum/csrf-cookie` untuk memperoleh cookie `XSRF-TOKEN`.
-   - Pengguna melakukan login via `POST /api/v1/auth/login`. Backend memverifikasi hash kata sandi (Argon2id/Bcrypt) dan menyuntikkan cookie `httpOnly` sesi.
+   - Pengguna melakukan login via `POST /api/v1/auth/login`. Backend memverifikasi hash kata sandi (bcrypt) dan menyuntikkan cookie `httpOnly` sesi.
 2. **Katalog & Filter Pencarian**:
    - Pengguna mengetik pencarian di beranda (debounced 400 ms) atau memilih filter kategori/kondisi.
    - TanStack Query mengirimkan `GET /api/v1/listings?q=...&category=...&condition=...&sort=...&page=...`.
