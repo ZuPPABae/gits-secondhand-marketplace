@@ -35,6 +35,7 @@ export const App: React.FC = () => {
                 {/* Halaman Publik */}
                 <Route path="/" element={<Home />} />
                 <Route path="/listings/:id" element={<ListingDetail />} />
+                <Route path="/users/:id" element={<Profile />} />
 
                 {/* Halaman Tamu (Guest only) */}
                 <Route
@@ -76,6 +77,14 @@ export const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <ListingForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/me/listings"
+                  element={
+                    <ProtectedRoute>
+                      <MyListings />
                     </ProtectedRoute>
                   }
                 />

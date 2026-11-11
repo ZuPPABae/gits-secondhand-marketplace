@@ -103,21 +103,21 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <Link
-                      to="/my-listings"
+                      to={user?.id ? `/users/${user.id}` : '/profile'}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-zinc-700 hover:bg-zinc-50 transition-colors"
+                    >
+                      <UserIcon className="w-4 h-4 text-zinc-400" />
+                      <span>Profil Saya</span>
+                    </Link>
+
+                    <Link
+                      to="/me/listings"
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-zinc-700 hover:bg-zinc-50 transition-colors"
                     >
                       <Package className="w-4 h-4 text-zinc-400" />
                       <span>Listing Saya</span>
-                    </Link>
-
-                    <Link
-                      to="/profile"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-zinc-700 hover:bg-zinc-50 transition-colors"
-                    >
-                      <UserIcon className="w-4 h-4 text-zinc-400" />
-                      <span>Profil Akun</span>
                     </Link>
 
                     <div className="my-1 border-t border-zinc-100" />

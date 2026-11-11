@@ -121,3 +121,32 @@ export async function updateListingApi(
   return response.data.data
 }
 
+export async function getMyListingsApi(
+  page: number = 1,
+  per_page: number = 12
+): Promise<PaginatedListingsResponse> {
+  const response = await api.get<PaginatedListingsResponse>('/api/v1/me/listings', {
+    params: { page, per_page },
+  })
+  return response.data
+}
+
+export async function updateListingStatusApi(
+  id: number | string,
+  status: 'available' | 'sold'
+): Promise<Listing> {
+  const response = await api.patch<ListingMutationResponse>(
+    `/api/v1/listings/${id}/status`,
+    { status }
+  )
+  return response.data.data
+}
+
+export async function deleteListingApi(
+  id: number | string
+): Promise<{ message: string }> {
+  const response = await api.delete<{ message: string }>(`/api/v1/listings/${id}`)
+  return response.data
+}
+
+
