@@ -55,3 +55,7 @@ yarn-error.log*
 *.tmp
 *.orig
 
+.agent/rules/docs-git.md
+.agent/rules/storage-cdn.md
+.agent/workflows/final-check.md
+.agent/workflows/write-docs.md
