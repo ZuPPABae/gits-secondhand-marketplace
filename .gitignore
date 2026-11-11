@@ -59,3 +59,4 @@ yarn-error.log*
 .agent/rules/storage-cdn.md
 .agent/workflows/final-check.md
 .agent/workflows/write-docs.md
+AGENTS.md
