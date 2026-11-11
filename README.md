@@ -82,12 +82,23 @@ Copy-Item backend\.env.example backend\.env
 Copy-Item frontend\.env.example frontend\.env
 ```
 
-### 2. Build dan Jalankan Container
+### 2. Penyesuaian Line Ending (Khusus Pengguna Windows)
+Karena Docker berjalan di ekosistem Linux, berkas skrip harus menggunakan format baris LF (Line Feed). Jika melakukan clone di Windows:
+
+Buka berkas backend/entrypoint.sh di editor teks (misalnya VS Code). Lihat ke sudut kanan bawah layar, klik tulisan CRLF dan ubah menjadi LF. Simpan berkas (Ctrl + S).
+
+### 3. Build dan Jalankan Container
 ```powershell
 docker compose up --build -d
 ```
 
-### 3. Jalankan Database Seeder
+### 4. Generate App Key Laravel
+Buat kunci enkripsi aplikasi agar backend dapat berjalan dengan aman:
+```powershell
+docker exec -i marketplace_backend php artisan key:generate
+```
+
+### 5. Jalankan Database Seeder
 Container backend akan secara otomatis menjalankan migrasi dan symlink storage (`php artisan storage:link`). Untuk memastikan database terisi dengan data demo awal:
 ```powershell
 docker exec -i marketplace_backend php artisan migrate:fresh --seed

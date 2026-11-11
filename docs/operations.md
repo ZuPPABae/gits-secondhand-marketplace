@@ -22,10 +22,15 @@ Copy-Item .env.example .env
 Copy-Item backend\.env.example backend\.env
 Copy-Item frontend\.env.example frontend\.env
 
-# 2. Build dan jalankan seluruh container
+# 2. (Khusus Pengguna Windows): Atur Line Ending entrypoint.sh
+
+# 3. Build dan jalankan seluruh container
 docker compose up --build -d
 
-# 3. Tunggu inisialisasi database dan jalankan seeder awal
+# 4. Generate Application Key (Backend)
+docker exec -i marketplace_backend php artisan key:generate
+
+# 5. Tunggu inisialisasi database dan jalankan seeder awal
 docker exec -i marketplace_backend php artisan migrate:fresh --seed
 ```
 
