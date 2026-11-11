@@ -78,6 +78,11 @@ export const MyListings: React.FC = () => {
 
   const currentPage = Math.max(1, Number(searchParams.get('page')) || 1)
 
+  // Set document title
+  React.useEffect(() => {
+    document.title = 'Listing Saya — PasarWarga'
+  }, [])
+
   // State
   const [toast, setToast] = useState<ToastState | null>(null)
   const [itemToDelete, setItemToDelete] = useState<Listing | null>(null)
@@ -168,8 +173,8 @@ export const MyListings: React.FC = () => {
           aria-labelledby="delete-dialog-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-zinc-200">
-            <div className="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mb-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-md border border-zinc-200">
+            <div className="w-11 h-11 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mb-4">
               <Trash2 className="w-5 h-5" />
             </div>
 
@@ -255,7 +260,7 @@ export const MyListings: React.FC = () => {
 
         {/* State: Error */}
         {isError && (
-          <div className="bg-white rounded-2xl border border-red-200 p-8 text-center max-w-md mx-auto my-8">
+          <div className="bg-white rounded-xl border border-red-200 p-8 text-center max-w-md mx-auto my-8">
             <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6" />
             </div>
@@ -368,7 +373,7 @@ export const MyListings: React.FC = () => {
                   </div>
 
                   {/* Tombol Aksi */}
-                  <div className="pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-100 flex sm:flex-col items-center sm:items-stretch justify-end gap-2 flex-shrink-0">
+                  <div className="pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-100 flex flex-col items-stretch justify-end gap-2 w-full sm:w-36 flex-shrink-0">
                     {/* Ubah Status */}
                     <Button
                       type="button"
@@ -381,7 +386,7 @@ export const MyListings: React.FC = () => {
                           ? 'Tandai barang kembali tersedia'
                           : 'Tandai barang sudah laku terjual'
                       }
-                      className="flex-1 sm:flex-initial"
+                      className="w-full"
                     >
                       <RefreshCw className="w-3.5 h-3.5 mr-1" />
                       <span>{isSold ? 'Tandai Tersedia' : 'Tandai Terjual'}</span>
@@ -425,7 +430,7 @@ export const MyListings: React.FC = () => {
 
         {/* Paginasi */}
         {!isLoading && meta && meta.last_page > 1 && (
-          <div className="mt-8 pt-6 border-t border-zinc-200 flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <span className="text-xs text-zinc-500">
               Menampilkan {meta.from ?? 0}–{meta.to ?? 0} dari {meta.total} barang
             </span>

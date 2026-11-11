@@ -28,6 +28,10 @@ export const Login: React.FC = () => {
   const location = useLocation()
   const [generalError, setGeneralError] = useState<string | null>(null)
 
+  React.useEffect(() => {
+    document.title = 'Masuk — PasarWarga'
+  }, [])
+
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
 
   const {

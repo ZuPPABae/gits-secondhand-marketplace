@@ -31,7 +31,7 @@ export const Profile: React.FC = () => {
   const isOwnProfile =
     Boolean(currentUser && targetUserId && String(currentUser.id) === String(targetUserId))
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['user-profile', targetUserId, currentPage],
     queryFn: () => getUserProfileApi(targetUserId!, currentPage),
     enabled: Boolean(targetUserId),
@@ -41,6 +41,15 @@ export const Profile: React.FC = () => {
   const profileUser = data?.user
   const listings = data?.listings?.data ?? []
   const meta = data?.listings?.meta
+
+  // Set document title
+  React.useEffect(() => {
+    if (profileUser?.name) {
+      document.title = `${profileUser.name} — PasarWarga`
+    } else {
+      document.title = 'Profil Pengguna — PasarWarga'
+    }
+  }, [profileUser?.name])
 
   const handlePageChange = (newPage: number) => {
     setSearchParams({ page: String(newPage) })
@@ -96,7 +105,7 @@ export const Profile: React.FC = () => {
       {/* State: Loading Header */}
       {isLoading && (
         <div className="space-y-8">
-          <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8 shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-8 shadow-2xs">
             <div className="flex flex-col sm:flex-row sm:items-center gap-5">
               <Skeleton className="w-20 h-20 rounded-full flex-shrink-0" />
               <div className="space-y-2.5 flex-1">
@@ -109,7 +118,7 @@ export const Profile: React.FC = () => {
 
           <div>
             <Skeleton className="h-6 w-44 rounded mb-5" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
@@ -128,7 +137,7 @@ export const Profile: React.FC = () => {
       {/* State: Error / Not Found */}
       {isError && (
         <div className="max-w-md mx-auto px-4 py-16 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold text-zinc-900">Pengguna Tidak Ditemukan</h2>
@@ -137,11 +146,16 @@ export const Profile: React.FC = () => {
               ? error.message
               : 'Profil pengguna yang Anda cari tidak ditemukan atau telah dinonaktifkan.'}
           </p>
-          <Link to="/">
-            <Button variant="secondary" size="md">
-              Kembali ke Beranda
+          <div className="flex items-center justify-center gap-3">
+            <Link to="/">
+              <Button variant="secondary" size="md">
+                Kembali ke Beranda
+              </Button>
+            </Link>
+            <Button variant="primary" size="md" onClick={() => refetch()}>
+              Coba Lagi
             </Button>
-          </Link>
+          </div>
         </div>
       )}
 
@@ -149,7 +163,7 @@ export const Profile: React.FC = () => {
       {!isLoading && !isError && profileUser && (
         <div className="space-y-8">
           {/* Kartu Profil Pengguna */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8 shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-8 shadow-2xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
               <div className="flex items-center gap-4 sm:gap-5 min-w-0">
                 {/* Avatar Inisial */}
@@ -218,7 +232,7 @@ export const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Empty State */}
+            {/* Grid Listing */}
             {listings.length === 0 ? (
               <EmptyState
                 title="Belum ada barang yang dijual"
@@ -233,7 +247,7 @@ export const Profile: React.FC = () => {
                 className="my-4"
               />
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
                 {listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
@@ -242,7 +256,7 @@ export const Profile: React.FC = () => {
 
             {/* Pagination Controls */}
             {meta && meta.last_page > 1 && (
-              <div className="mt-8 pt-6 border-t border-zinc-200 flex items-center justify-between">
+              <div className="mt-8 pt-6 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
                 <span className="text-xs text-zinc-500">
                   Menampilkan {meta.from ?? 0}–{meta.to ?? 0} dari {meta.total} barang
                 </span>

@@ -35,23 +35,32 @@ export const ListingDetail: React.FC = () => {
     staleTime: 1000 * 60 * 2, // 2 menit di client
   })
 
+  // Set document title
+  React.useEffect(() => {
+    if (listing?.title) {
+      document.title = `${listing.title} — PasarWarga`
+    } else {
+      document.title = 'Detail Barang — PasarWarga'
+    }
+  }, [listing?.title])
+
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
         <Skeleton className="h-6 w-36 mb-6 rounded-md" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 space-y-4">
-            <Skeleton className="w-full aspect-[4/3] rounded-2xl" />
+            <Skeleton className="w-full aspect-[4/3] rounded-xl" />
             <div className="flex gap-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="w-20 h-16 rounded-lg" />
               ))}
             </div>
-            <Skeleton className="h-40 w-full rounded-2xl mt-6" />
+            <Skeleton className="h-40 w-full rounded-xl mt-6" />
           </div>
           <div className="lg:col-span-5 space-y-4">
-            <Skeleton className="h-48 w-full rounded-2xl" />
-            <Skeleton className="h-44 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-44 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -61,7 +70,7 @@ export const ListingDetail: React.FC = () => {
   if (isError || !listing) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-bold text-zinc-900">
@@ -108,7 +117,7 @@ export const ListingDetail: React.FC = () => {
         {/* Kolom Kiri: Galeri Foto & Deskripsi */}
         <div className="lg:col-span-7 space-y-6">
           {/* Foto Utama */}
-          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-2xs">
             <div className="relative aspect-[4/3] w-full bg-zinc-100 flex items-center justify-center">
               {currentImage?.url ? (
                 <img
@@ -169,7 +178,7 @@ export const ListingDetail: React.FC = () => {
           </div>
 
           {/* Deskripsi Barang */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
             <h2 className="text-lg font-semibold text-zinc-900 tracking-tight mb-4">
               Deskripsi Barang
             </h2>
@@ -203,7 +212,7 @@ export const ListingDetail: React.FC = () => {
         {/* Kolom Kanan: Rincian Harga, Penjual & Tombol WhatsApp */}
         <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
           {/* Kartu Harga & Judul */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
                 <Tag className="w-3 h-3" />
@@ -251,7 +260,7 @@ export const ListingDetail: React.FC = () => {
           </div>
 
           {/* Kartu Informasi Penjual & Hubungi WhatsApp */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
+          <div className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-7 shadow-2xs">
             <h3 className="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-4">
               Informasi Penjual
             </h3>
@@ -297,7 +306,7 @@ export const ListingDetail: React.FC = () => {
                 <button
                   type="button"
                   disabled
-                  className="w-full h-12 rounded-xl bg-zinc-100 text-zinc-400 font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none"
+                  className="w-full h-11 rounded-lg bg-zinc-100 text-zinc-400 font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed select-none"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Barang Sudah Terjual</span>
@@ -312,7 +321,7 @@ export const ListingDetail: React.FC = () => {
                   href={listing.user.whatsapp_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
+                  className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span>Hubungi via WhatsApp</span>

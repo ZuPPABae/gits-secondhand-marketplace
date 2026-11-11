@@ -173,6 +173,7 @@ export const ListingForm: React.FC = () => {
     isLoading: listingLoading,
     isError: listingFetchError,
     error: listingFetchErrorObj,
+    refetch: refetchListing,
   } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => getListingDetailApi(id!),
@@ -180,6 +181,11 @@ export const ListingForm: React.FC = () => {
     staleTime: 0,
     retry: 1,
   })
+
+  // Set document title
+  useEffect(() => {
+    document.title = isEditMode ? 'Edit Barang — PasarWarga' : 'Pasang Barang — PasarWarga'
+  }, [isEditMode])
 
   // Populate form when existing listing is loaded
   useEffect(() => {
@@ -381,7 +387,7 @@ export const ListingForm: React.FC = () => {
   if (isEditMode && listingFetchError) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-bold text-zinc-900">Barang Tidak Ditemukan</h2>
@@ -390,12 +396,17 @@ export const ListingForm: React.FC = () => {
             ? listingFetchErrorObj.message
             : 'Barang yang ingin kamu edit tidak ditemukan atau telah dihapus.'}
         </p>
-        <Link
-          to="/"
-          className="h-10 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg border border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 transition-colors"
-        >
-          Kembali ke Beranda
-        </Link>
+        <div className="flex items-center justify-center gap-3">
+          <Link
+            to="/"
+            className="h-10 px-4 inline-flex items-center justify-center text-sm font-medium rounded-lg border border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 transition-colors"
+          >
+            Kembali ke Beranda
+          </Link>
+          <Button variant="primary" size="sm" onClick={() => refetchListing()}>
+            Coba Lagi
+          </Button>
+        </div>
       </div>
     )
   }
@@ -407,7 +418,7 @@ export const ListingForm: React.FC = () => {
   if (isNotOwner) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-500 mx-auto flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-500 mx-auto flex items-center justify-center mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-bold text-zinc-900">Akses Ditolak</h2>
@@ -751,6 +762,7 @@ export const ListingForm: React.FC = () => {
                     multiple
                     accept="image/jpeg,image/jpg,image/png,image/webp"
                     className="sr-only"
+                    aria-label="Unggah foto barang"
                     onChange={handleFileChange}
                   />
                   <label

@@ -36,6 +36,10 @@ const SORT_OPTIONS = [
 export const Home: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
 
+  useEffect(() => {
+    document.title = 'PasarWarga — Marketplace Barang Bekas Komunitas'
+  }, [])
+
   // Ambil state dari URL query string
   const urlQ = searchParams.get('q') || ''
   const selectedCategory = searchParams.get('category') || ''
@@ -164,7 +168,8 @@ export const Home: React.FC = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Cari sepeda, perkakas, elektronik, hobi..."
-            className="w-full h-12 pl-11 pr-10 bg-white text-zinc-900 text-sm sm:text-base rounded-xl border border-zinc-200 hover:border-zinc-300 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 shadow-xs transition-colors"
+            aria-label="Cari barang bekas"
+            className="w-full h-11 pl-11 pr-10 bg-white text-zinc-900 text-sm sm:text-base rounded-lg border border-zinc-200 hover:border-zinc-300 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 shadow-xs transition-colors"
           />
           {searchInput && (
             <button
@@ -175,6 +180,7 @@ export const Home: React.FC = () => {
               }}
               className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 cursor-pointer"
               title="Hapus pencarian"
+              aria-label="Hapus kata kunci pencarian"
             >
               <X className="w-4 h-4" />
             </button>
@@ -182,7 +188,7 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Kategori Horizontal Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             type="button"
             onClick={() => updateParam('category', null)}
@@ -222,6 +228,7 @@ export const Home: React.FC = () => {
               <select
                 value={selectedCondition}
                 onChange={(e) => updateParam('condition', e.target.value)}
+                aria-label="Filter kondisi barang"
                 className="bg-transparent text-zinc-700 text-xs sm:text-sm font-medium focus:outline-none cursor-pointer"
               >
                 {CONDITIONS.map((c) => (
@@ -238,6 +245,7 @@ export const Home: React.FC = () => {
               <select
                 value={selectedSort}
                 onChange={(e) => updateParam('sort', e.target.value)}
+                aria-label="Urutkan daftar barang"
                 className="bg-transparent text-zinc-700 text-xs sm:text-sm font-medium focus:outline-none cursor-pointer"
               >
                 {SORT_OPTIONS.map((s) => (
@@ -280,13 +288,13 @@ export const Home: React.FC = () => {
 
       {/* Konten Utama: Loading Skeleton / Error / Empty / Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {Array.from({ length: 12 }).map((_, idx) => (
             <ListingCardSkeleton key={idx} />
           ))}
         </div>
       ) : isError ? (
-        <div className="border border-red-200 bg-red-50/50 rounded-2xl p-8 text-center max-w-md mx-auto my-12">
+        <div className="border border-red-200 bg-red-50/50 rounded-xl p-8 text-center max-w-md mx-auto my-12">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-zinc-900">
             Gagal Memuat Daftar Barang
@@ -315,7 +323,7 @@ export const Home: React.FC = () => {
       ) : (
         <>
           {/* Grid Barang */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
             {listings.map((item) => (
               <ListingCard key={item.id} listing={item} />
             ))}

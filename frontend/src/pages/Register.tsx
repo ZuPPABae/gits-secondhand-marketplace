@@ -37,6 +37,10 @@ export const Register: React.FC = () => {
   const navigate = useNavigate()
   const [generalError, setGeneralError] = useState<string | null>(null)
 
+  React.useEffect(() => {
+    document.title = 'Daftar Akun — PasarWarga'
+  }, [])
+
   const {
     register,
     handleSubmit,

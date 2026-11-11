@@ -38,40 +38,41 @@ export const Navbar: React.FC = () => {
             <span className="font-semibold text-zinc-900 tracking-tight leading-tight">
               PasarWarga
             </span>
-            <span className="text-[11px] text-zinc-500 font-normal">
+            <span className="text-[11px] text-zinc-500 font-normal hidden sm:block">
               Marketplace Komunitas
             </span>
           </div>
         </Link>
 
         {/* Dynamic Navigation Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {isLoading ? (
-            <div className="h-9 w-24 bg-zinc-100 rounded-lg animate-pulse" />
+            <div className="h-9 w-20 sm:w-24 bg-zinc-100 rounded-lg animate-pulse" />
           ) : !isAuthenticated ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Link
                 to="/login"
-                className="h-10 px-4 inline-flex items-center justify-center text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               >
                 Masuk
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-4 inline-flex items-center justify-center text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg transition-colors"
+                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-800 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               >
                 Daftar
               </Link>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Pasang Barang CTA */}
               <Link
                 to="/pasang"
-                className="h-10 px-4 inline-flex items-center justify-center gap-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors shadow-none"
+                className="h-10 px-3 sm:px-4 inline-flex items-center justify-center gap-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Pasang Barang</span>
+                <PlusCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Pasang Barang</span>
+                <span className="sm:hidden text-xs">Pasang</span>
               </Link>
 
               {/* User Account Menu */}
@@ -79,20 +80,21 @@ export const Navbar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="h-10 px-3 inline-flex items-center gap-2 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm text-zinc-800 cursor-pointer"
+                  className="h-10 px-2.5 sm:px-3 inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors text-sm text-zinc-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
                   aria-expanded={dropdownOpen}
+                  aria-label="Menu akun pengguna"
                 >
-                  <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center justify-center flex-shrink-0">
                     {user?.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-medium max-w-[120px] truncate">
+                  <span className="font-medium max-w-[70px] sm:max-w-[120px] truncate text-xs sm:text-sm">
                     {user?.name}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                  <ChevronDown className="w-4 h-4 text-zinc-400 flex-shrink-0" />
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-lg border border-zinc-200 py-1.5 z-50 text-sm">
+                  <div className="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-md border border-zinc-200 py-1.5 z-50 text-sm">
                     <div className="px-3 py-2 border-b border-zinc-100">
                       <p className="font-medium text-zinc-900 truncate">
                         {user?.name}

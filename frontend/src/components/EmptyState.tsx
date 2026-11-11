@@ -21,7 +21,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <div
-      className={`border border-dashed border-zinc-200 rounded-2xl p-8 sm:p-12 text-center bg-white ${className}`}
+      className={`border border-dashed border-zinc-200 rounded-xl p-8 sm:p-12 text-center bg-white ${className}`}
     >
       <div className="w-12 h-12 rounded-xl bg-zinc-100 text-zinc-400 mx-auto flex items-center justify-center mb-3.5">
         {icon || <PackageOpen className="w-6 h-6 text-zinc-400" />}
